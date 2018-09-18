@@ -1,0 +1,25 @@
+{
+  "fitbit": {
+    "appUUID": "44de5c81-b77c-4f90-baa8-38f3e3d28695",
+    "appType": "clockface",
+    "appDisplayName": "Orbits NS",
+    "iconFile": "resources/icon.png",
+    "wipeColor": "",
+    "requestedPermissions": [
+      "access_internet",
+      "run_background"
+    ],
+    "buildTargets": [
+      "higgs",
+      "meson"
+    ],
+    "i18n": {
+      "en": {
+        "name": "Orbits NS"
+      }
+    }
+  },
+  "scripts": {
+    "build": "fitbit-build"
+  }
+}

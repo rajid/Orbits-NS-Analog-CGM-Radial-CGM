@@ -1,0 +1,66 @@
+
+<symbol id="clock" >
+ <svg>
+  <svg>  
+    <mask id="mask">
+      <rect x="50%-1" y="0" width="3" height="100%" />
+      <rect x="0" y="50%-1" width="100%" height="3" />
+      <g transform="translate(50%-75,50%-129),rotate(60)">
+        <rect x="$" y="$-1" width="300" height="3"  />
+      </g>
+      <g transform="translate(50%-129,50%-75),rotate(30)">
+        <rect x="$" y="$-1" width="300" height="3"  />
+      </g>
+      <g transform="translate(50%-129,50%+75),rotate(-30)">
+        <rect x="$" y="$-1" width="300" height="3"  />
+      </g>
+      <g transform="translate(50%-75,50%+129),rotate(-60)">
+        <rect x="$" y="$-1" width="300" height="3"  />
+      </g>
+    </mask>  
+
+    <svg  mask="#mask" width="100%" height="100%" >
+      <gradientRect id="rays" width="100%" height="100%" fill="cyan"
+        gradient-type="radial"
+        gradient-x1="50%" gradient-y1="50%"
+        gradient-x2="90%" gradient-y2="90%"
+        gradient-color1="yellow"
+        gradient-color2="black" />
+    </svg>
+  </svg>
+
+  <image id="star" href="StarOnly.png" x="50%-25" y="50%-25" width="49" height="49" />
+
+  <g id="orbit" transform="translate(50%,50%)" opacity="1" >
+     <rect x="0" y="-20%" width="1" height="26%" fill="red"  opacity="0" >
+       <g id="earth" transform="translate($,-26%)">
+          <image href="earth_only.png" width="37" height="37" x="$-19" y="$-19" opacity="1" />
+          <g id="moonorbit" opacity="1" >
+            <rect x="$-19" y="$-19" width="1" height="45" fill="red" opacity="0"  >
+              <g id="moon" transform="translate($, -45)">
+                <image href="moon_only.png" width="19" height="19" x="$-10" y="$-10" />
+              </g>
+            </rect>
+          </g>
+       </g>
+    </rect>
+  </g>
+
+   <g id="belt" transform="translate(50%,50%)" opacity="1">
+      <rect x="0" y="-140" width="1" height="140" opacity="0">
+
+        <g id="asteroid" transform="translate($,-140)">
+          <image href="asteroid.png" width="15" height="15" x="$-7" y="$-7" opacity="1" />
+        </g>
+      </rect>
+  </g>
+
+  <g id="cometorbit" transform="translate(50%,50%)" opacity="1">
+      <rect x="0" y="-140" width="0" height="140" >
+        <g id="comet" transform="translate($,-140)" display="none">
+          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" />
+        </g>
+      </rect>
+  </g>
+</svg>
+</symbol>
