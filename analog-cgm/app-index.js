@@ -1,1 +1,1 @@
-../cgm-clock.js
+../cgm-app.js
