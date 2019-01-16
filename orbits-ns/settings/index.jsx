@@ -5,6 +5,10 @@ function HelloWorld(props) {
   return (
     
     <Page>
+      <Text>Note: This software has been tested to best of my abilities, however some bugs
+        may still be present.  Please make sure you have some other method of receiving a warning
+        of Urgent Low BG values.
+      </Text>
       <Text>Some general notes on how the watch face displays information are included
         at the end of this configuration page.</Text>
       <Text>(Scroll to end for Release Notes)</Text>
@@ -18,7 +22,7 @@ function HelloWorld(props) {
  <Button
   label="Touch here to reset comet now"
   onClick={() => { props.settingsStorage.setItem("change", JSON.stringify("now"))}} />
-        <TextInput fill="lightblue" settingsKey="changeDate" label="Manual comet update: MM/DD/YYYY HH:MM" type="datetime" />
+        <TextInput fill="lightblue" settingsKey="changeDate" label="Manually override comet reset time: MM/DD/YYYY HH:MM" type="datetime" />
         <TextInput settingsKey="cometDays" label="Reappear after X days" type="text" />
         <TextInput settingsKey="cometHours" label="Reappear X hours before the event" type="text" />
       <Text  align="center">URL to receive comet reset time:</Text>
@@ -34,7 +38,21 @@ function HelloWorld(props) {
       </Section>
 
       
-      <Section title={<Text bold align="center">Nightscout base URL:</Text>}>
+      <Section title={<Text bold align="center">Nightscout Configuration:</Text>}>
+        <Text>If you are running your Nightscout uploading program on the same phone where your
+          Fitbit application is running, and if your Nightscount uploader supports "Local/Offline" mode, then
+          simply turning on this toggle may be all that's needed.  (This uses the fetch
+          URL "http://127.0.0.1:1979", which is correct for Spike.)
+        </Text>
+        <Toggle settingsKey="local" label={`Use Local Mode: ${props.settings.local === 'true'?'On':'Off'}`}/>
+            { props.settings.local === 'true' &&
+                <Section>
+        <Text>After selecting "local mode", select either the XDrip+ or the Spike version, depending upon
+          which program you are running on your phone.</Text>
+              <Toggle settingsKey="localapp" label={`Use Local Mode: ${props.settings.localapp === 'true'?'xDrip+':'Spike'}`}/>
+                  </Section>
+        }
+
         <Text>If you are using Nightscout, you can configure your base URL here.
           This turns on the BG monitoring feature.  Make sure to use the "https" version
           of the URL.  (If the status dot,
@@ -43,6 +61,8 @@ function HelloWorld(props) {
           If the status dot changes to green but you still see no number in the lower-left
           or arrow in the lower-right, then either your URL is incorrect or your NightScout
           page has old data.)
+          (To talk directly to the application "Spike" on an iphone, use "https://127.0.0.1:1979".
+	  Other such direct phone to watch communication may be possible with other apps and on other phones.)
         </Text>
         <TextInput settingsKey="url" label="eg. https://name.herokuapp.com" type="text" />
         <Text>If you are using a Nightscout token, you can configure that here.  If you
@@ -106,6 +126,10 @@ function HelloWorld(props) {
         
         <TextInput settingsKey="warn-start" label="Quiet Start HH:MM (24hr)" type="text" />
         <TextInput settingsKey="warn-end" label="Quiet End HH:MM (24hr)" type="text" />
+        <Text>Only give me Urgent High and Urgent Low warnings during the above 'Quiet Time' period.
+          (Note: you will NOT receive a buzz notification for Low or High warning messages during the Quiet Time, but you
+          WILL receive a buzz notification for Urgent Low and Urgent High messages.)</Text>
+        <Toggle settingsKey="urgent" label={`Only Urgent warnings: ${props.settings.urgent === 'true' ? 'On' : 'Off'}`}/>
       </Section>
 
         <Section title={<Text bold align="center">Daily Alarms:</Text>}>
@@ -238,6 +262,14 @@ function HelloWorld(props) {
         When a low or high glucose alarm occurs, the alarm can be suppressed for various
         amounts of time.  A graph can also be displayed of the last 24 values.
         
+        Glucose high and low limit suppressions are automatically cancelled once the glucose value
+        has crossed back toward normal values.
+
+        When an Urgent High or Urgent Low suppression is set, the corresponding non-urgent limit suppression
+        is also set.  This prevents additional warnings as the glucose value progresses back toward
+        normal values.  Otherwise, for example, when recovering from an Urgent Low, an additional Low
+        warning would possibly be presented unnecessarily.
+        
         <Text align="left" bold>Glucose high and low limits:</Text>
         If low and/or high glucose limits are set, then the companion application running
         on the phone will automatically fetch glucose information at set intervals.  If no
@@ -305,7 +337,46 @@ function HelloWorld(props) {
                 Made sure all points on graphs are visible.
                 Fixed bug whereby wrong alarm note message would be presented.
 	</Text>
+            <Text align="left" bold>1.7</Text>
+            <Text>
+              Correctly handle "mmol/l" units with alerts, etc.
+            </Text>
 	
+            <Text align="left" bold>1.8</Text>
+            <Text>
+              Fixed various small bugs in many places.
+              Introduced a unique vibration pattern.
+              Set default low, high, & in-range colors.
+              Suspend of an urgent warning also suspends associated non-urgent as well,
+	        otherwise recovering from an urgent warning will trigger the non-urgent warning.
+	      Introduced "Local mode" to support "127.0.0.1" usage direct to the phone.
+            </Text>
+
+            <Text align="left" bold>1.8.1</Text>
+            <Text>
+              Fixed bug which didn't give an Urgent Low message if some other message had been snoozed already.
+              Fixed bug which where "Current Suppressions" only displayed one suppression.
+              Fixed "Snooze Comm Warnings" menu item to work correctly.
+              Fixed bug which could result in multiple BG warnings even after they were snoozed.
+            </Text>
+
+            <Text align="left" bold>1.8.2</Text>
+            <Text>
+              Fixed various issues with alarms not triggered or displaying wrong messages.
+              Fixed "Current Suppressions" not displaying all alarm suppressions.
+              Fixed error where a "Dismiss" button could sometimes appear when it shouldn't.
+              Introduced auto-cancelling of BG suppressions after recovering back over the limit.
+            </Text>
+
+            <Text align="left" bold>1.8.3</Text>
+            Buzz for any received BG value lower than 40 mg/dl.
+            Introduced xDrip+ "local/offline" mode configuration toggle.
+
+            <Text align="left" bold>1.8.4</Text>
+            <Text>
+                Only buzz for BG value lower than 40 mg/dl. No message window.
+                Increase size of touch area for invoking graph screen.
+            </Text>
       </Section>
 
     </Page>

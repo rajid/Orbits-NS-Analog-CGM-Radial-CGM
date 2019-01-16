@@ -1,0 +1,29 @@
+{
+  "name": "radial-cgm",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fitbit/sdk": "~1.0.3",
+    "@fitbit/sdk-cli": "^1.0.2"
+  },
+  "fitbit": {
+    "appUUID": "0173730e-5381-4495-bc6e-6ec93c8df029",
+    "appType": "clockface",
+    "appDisplayName": "Radial CGM",
+    "iconFile": "resources/icon.png",
+    "wipeColor": "#ffffff",
+    "requestedPermissions": [
+      "access_internet",
+      "run_background"
+    ],
+    "buildTargets": [
+      "higgs",
+      "meson"
+    ],
+    "i18n": {}
+  },
+  "scripts": {
+    "build": "../uglify-build.sh ; fitbit-build"
+  }
+}

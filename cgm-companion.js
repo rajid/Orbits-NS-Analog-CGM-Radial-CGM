@@ -16,7 +16,11 @@ import {
     geolocation
 } from "geolocation";
 import * as util from "../common/utils";
+import appName from "./appname.js";
 
+
+// Max. times to try Inet and getting fetch errors before going to Local Mode
+let MAXFETCHERRORS = 3;
 
 // // default URL pointing at xDrip Plus endpoint
 var baseURL = "";
@@ -63,6 +67,8 @@ let cometDays=3;
 let cometHours=12;
 var cometURL;
 
+
+
 function  sendData(bg, date, period, delta, next, calibration) {
     console.log("Replying from companion");
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
@@ -75,7 +81,7 @@ function  sendData(bg, date, period, delta, next, calibration) {
             period: period,
             delta: delta,
             update: next,
-            calibration: calibration
+            cal: calibration
         });
 
     } else {
@@ -85,6 +91,7 @@ function  sendData(bg, date, period, delta, next, calibration) {
 
 
 let doingFetch = false; // Try to avoid overlapping fetches
+let fetchErrors = 0; // know when to try Local mode
 function queryBGD() {
     if (baseURL == "") return;
     let url = getSgvURL()
@@ -104,6 +111,7 @@ function queryBGD() {
         .then(function (response) {
             return response.json()
                 .then(function(data) {
+                    fetchErrors = 0; // worked!!
                     console.log(`Got data: ${data}`);
                     // Calculate how long between updates
                     let a = data[0].date;
@@ -113,7 +121,7 @@ function queryBGD() {
                     let calibration=false;
                     // Save away the last info
                     if (data[0].type == "cal") {
-                        calibration = true;
+//                        calibration = true;
                         lastbg = data[1].sgv;
                         lastdate = data[1].date;
                     } else {
@@ -135,6 +143,14 @@ function queryBGD() {
         })
         .catch(function (err) {
             console.log("Error fetching " + err);
+            if (!useLocal && (++fetchErrors >= MAXFETCHERRORS)) {
+                if (localMode <= 0) {
+                    // try local mode
+                    localMode = 10; // local mode 10 times - then try Inet again
+                } else if (localMode < 10-MAXFETCHERRORS) {
+                    localMode = 0; // Local mode isn't working either
+                }
+            }
             // Try again in 1 minute
             sendData(0,0,0,0, now.getTime() + (1 * 60 * 1000), false);
             doingFetch = false;              
@@ -143,16 +159,24 @@ function queryBGD() {
 
 
 function returnGraphData(data) {  
-    const myFileInfo = encode(data);
+    let graphData = [];
+
+    for (let i = 0 ; i*2 < data.length ; i++) {
+        graphData[i] = {s: data[i*2].sgv, d: data[i*2].date};
+    }
+    const myFileInfo = encode(graphData);
     outbox.enqueue('graph.json', myFileInfo);
+
+    gettingGraphData = false;
 }
+
 
 function sendGraphData(data) {
     
     let graphData = [];
     
     for (let i = 0 ; i < data.length ; i++) {
-        graphData[i] = {sgv: data[i].sgv, date: data[i].date};
+        graphData[i] = {s: data[i].sgv, d: data[i].date};
     }
 
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
@@ -183,8 +207,11 @@ function getGraphData() {
         .then(function (response) {
             return response.json()
                 .then(function(data) {
-                    //        returnGraphData(data);
-                    sendGraphData(data);
+                    if (appName() == "radialcgm") {
+                        returnGraphData(data);
+                    } else {
+                        sendGraphData(data);
+                    }
                 });
         })
         .catch(function (err) {
@@ -207,10 +234,10 @@ function formatReturnData() {
     queryBGD();
 }
 
-function formatUpdateData() {
-    console.log("formatUpdateData");
-    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext, false);
-}
+//function formatUpdateData() {
+//    console.log("formatUpdateData");
+//    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext, false);
+//}
 
 function sendIOBCOB(data) {
     
@@ -262,9 +289,9 @@ messaging.peerSocket.onmessage = function(evt) {
         formatReturnData(); // Actually gather the data now
         break;
 
-    case "update":
-        formatUpdateData(); // Just send me the last data
-        break;
+//    case "update":
+//        formatUpdateData(); // Just send me the last data
+//        break;
 
     case "podchange":
         getAndSendPodchange();
@@ -439,6 +466,7 @@ settingsStorage.onchange = function(evt) {
             settingsStorage.removeItem("changeDate");
         }
         settingsStorage.setItem("podchange", d.getTime());
+        addURL(d);
         getAndSendPodchange();
         break;
 
@@ -486,43 +514,47 @@ settingsStorage.onchange = function(evt) {
         break;
 
     case "urgentLow":
-        BGUrgentLow = parseInt(JSON.parse(evt.newValue).name);
+        BGUrgentLow = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(BGUrgentLow)) {
             settingsStorage.removeItem("BGUrgentLow");
+            BGUrgentLow = 0;
         }
         console.log(`Urgent Low limit set to ${BGUrgentLow}`);
         sendLowHigh();
         break;
 
     case "low":
-        BGLow = parseInt(JSON.parse(evt.newValue).name);
+        BGLow = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(BGLow)) {
             settingsStorage.removeItem("BGLow");
+            BGLow = 0;
         }
         console.log(`Low limit set to ${BGLow}`);
         sendLowHigh();
         break;
 
     case "high":
-        BGHigh = parseInt(JSON.parse(evt.newValue).name);
+        BGHigh = parseFloat(JSON.parse(evt.newValue).name);
+        console.log(`High limit set to ${BGHigh}`);
         if (isNaN(BGHigh)) {
             settingsStorage.removeItem("BGHigh");
+            BGHigh = 0;
         }
-        console.log(`High limit set to ${BGHigh}`);
         sendLowHigh();
         break;
 
     case "urgentHigh":
-        BGUrgentHigh = parseInt(JSON.parse(evt.newValue).name);
+        BGUrgentHigh = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(BGUrgentHigh)) {
             settingsStorage.removeItem("BGUrgentHigh");
+            BGUrgentHigh = 0;
         }
         console.log(`High limit set to ${BGUrgentHigh}`);
         sendLowHigh();
         break;
 
     case "diff":
-        BGDiff = parseInt(JSON.parse(evt.newValue).name);
+        BGDiff = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(BGDiff)) {
             settingsStorage.removeItem("BGDiff");
         }
@@ -531,7 +563,7 @@ settingsStorage.onchange = function(evt) {
         break;
 
     case "longDiff":
-        longDiff = parseInt(JSON.parse(evt.newValue).name);
+        longDiff = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(longDiff)) {
             settingsStorage.removeItem("longDiff");
         }
@@ -552,6 +584,7 @@ settingsStorage.onchange = function(evt) {
         try {
             let w = JSON.parse(evt.newValue).name;
             sendSetting("warn-start", 0, w);
+            console.log(`********** sending warn-start as ${w}`);
         } catch (err) {
             settingsStorage.removeItem("warn-start");
         }
@@ -561,6 +594,7 @@ settingsStorage.onchange = function(evt) {
         try {
             let w = JSON.parse(evt.newValue).name;
             sendSetting("warn-end", 0, w);
+            console.log(`********** sending warn-end as ${w}`);
         } catch (err) {
             settingsStorage.removeItem("warn-end");
         }
@@ -592,8 +626,9 @@ settingsStorage.onchange = function(evt) {
             baseURL = baseURL.replace(/\/$/, "");
             settingsStorage.setItem("url", JSON.stringify({"name": baseURL}));
             sendSetting("ns", 1, "");
+            setTimeout(getGraphData, 5 * 1000);
             //        queryBGD();
-        } else {
+        } else if (!(useLocal == 'true')) {
             sendSetting("ns", 0, "");
         }
         break;
@@ -603,6 +638,7 @@ settingsStorage.onchange = function(evt) {
         if (URLtoken != "") {
             URLtoken = URLtoken.trim();
             settingsStorage.setItem("token", JSON.stringify({"name": URLtoken}));
+            setTimeout(getGraphData, 5 * 1000);
             queryBGD();
         }
         break;
@@ -612,6 +648,26 @@ settingsStorage.onchange = function(evt) {
         units = (toggleValue === 'false') ? "bg/dl" : "mmol/L";
         sendSetting("units", 0, units);
         console.log(`New Units of ${units}`);
+        break;
+
+    case "local":
+        useLocal = settingsStorage.getItem("local");
+        console.log(`useLocal = ${useLocal}`);
+        if (useLocal === 'true') {
+            sendSetting("ns", 1, "");
+            // Also send graph info
+            setTimeout(getGraphData, 5 * 1000);
+        } else if (baseURL == "") {
+            sendSetting("ns", 0, "");
+        }
+        break;
+
+    case "localapp":
+        localApp = settingsStorage.getItem("localapp");
+        console.log(`localApp = ${localApp}`);
+        if (localApp === 'true') { // xdrip+
+            setTimeout(getGraphData, 5 * 1000);
+        }
         break;
 
     case "cometURL":
@@ -639,6 +695,12 @@ settingsStorage.onchange = function(evt) {
         }
         settingsStorage.setItem("bgFont1", evt.newValue);
         sendSetting("bgFont1", size, "");
+        break;
+
+    case "urgent": // Only Urgent High and Low warnings during quiet time
+        let onlyUrgent = settingsStorage.getItem("urgent");
+        sendSetting("urgent", (onlyUrgent === 'true')?1:0, "");
+        console.log(`Urgent only is ${onlyUrgent}`);
         break;
 
     case "alarm0":
@@ -685,7 +747,8 @@ settingsStorage.onchange = function(evt) {
         }
         catch (err) {
             console.log(`err = ${err}`);
-            settingsStorage.setItem("alarmsnooze"+index.toString(), alarmSnooze[index].toString());
+            settingsStorage.setItem("alarmsnooze"+index.toString(),
+                                    JSON.stringify({"name": alarmSnooze[index].toString()}));
         }
         break;
 
@@ -735,8 +798,25 @@ function getSettings(key) {
     }
 }
 
+function getBaseURL() {
+
+    console.log(`useLocal=${useLocal}`);
+    if (useLocal === 'true' || localMode > 0) { // still doing Local mode?
+        if (!useLocal) localMode--; // countdown until trying Inet again
+        if (localApp === 'true') {
+            return("http://127.0.0.1:17580");
+        } else {
+            return("http://127.0.0.1:1979");
+        }
+    } else {
+        return(baseURL);
+    }
+}
+
+let localMode = 0;
 function getSgvURL() {
-    let URL = baseURL + "/api/v1/entries.json?count=2";
+
+    let URL = getBaseURL() + "/api/v1/entries.json?count=2";
     if (URLtoken != "") {
         URL += "&token=" + URLtoken;
     }
@@ -744,7 +824,10 @@ function getSgvURL() {
 }
 
 function getGraphURL() {
-    let URL = baseURL + "/api/v1/entries/sgv.json?count=24";
+    let count = 24;
+    if (appName() == "radialcgm") count = (66*2);
+
+    let URL = getBaseURL() + `/api/v1/entries/sgv.json?count=${count}`;
     if (URLtoken != "") {
         URL += "&token=" + URLtoken;
     }
@@ -752,7 +835,7 @@ function getGraphURL() {
 }
 
 function getIOBCOBURL() {
-    let URL = baseURL + "/pebble";
+    let URL = getBaseURL() + "/pebble";
     if (URLtoken != "") {
         URL += "?token=" + URLtoken;
     }
@@ -784,7 +867,6 @@ function setUpdateInterval() {
              bgNext < now.getTime() + (util.Min2ms(minUpdate));
              bgNext += period) {
             let y = (bgNext - now.getTime()) / (60 * 1000);
-            console.log(`bgNext moves to ${y} mins in future`);
         }
         let y = (bgNext - now.getTime()) / (60 * 1000);
         console.log(`bgNext positioned at ${y} mins in future`);
@@ -795,7 +877,7 @@ function setUpdateInterval() {
         bgNext = now.getTime() + minUpdate * 60 * 1000;      
         }
         */
-        bgNext += Math.floor((Math.random() * 10) * 1000); // and about 10 sec's to avoid race conditions
+        bgNext += 15 * 1000; // next entry could be a little late
         let m = (bgNext - now.getTime()) / 60000;
         
         console.log(`Need wakeup in ${m} mins`);
@@ -823,16 +905,16 @@ function sendLowHigh() {
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
         messaging.peerSocket.send({
             key: "limits",
-            urgentLow: BGUrgentLow,
-            low: BGLow,
-            high: BGHigh,
-            urgentHigh: BGUrgentHigh,
+            UL: BGUrgentLow,
+            L: BGLow,
+            H: BGHigh,
+            UH: BGUrgentHigh,
             diff: BGDiff,
-            urgentLowColor: urgentLowColor,
-            lowColor: lowColor,
-            inRangeColor: inRangeColor,
-            highColor: highColor,
-            urgentHighColor: urgentHighColor,
+            ULC: urgentLowColor,
+            LC: lowColor,
+            IRC: inRangeColor,
+            HC: highColor,
+            UHC: urgentHighColor,
         });
     } else {
         console.log("No peerSocket connection");
@@ -867,17 +949,23 @@ function sendBGFontSize() {
 
 function sendConfiguration() {
 
-    //  getAndSendPodchange();
     sendBGFontSize();
-    sendLowHigh();
     sendLongInfo();
     sendSetting("units", 0, units);
-    if (baseURL == "") {
+    sendSetting("urgent", onlyUrgent, "");
+
+    setTimeout(sendConfiguration2, 2 * 1000); // send rest later
+}
+
+function sendConfiguration2() {
+    sendLowHigh();
+    if (baseURL == "" && !(useLocal === 'true')) {
         console.log("ns false");
         sendSetting("ns", 0, "");
     } else {
         console.log("ns true");
         sendSetting("ns", 1, "");
+        setTimeout(getGraphData, 5 * 1000);
     }
     getAndSendPodchange();
     if (typeof(warnStart) != "undefined")
@@ -888,13 +976,13 @@ function sendConfiguration() {
     sendSetting("hour", 0, hourColor);
     sendSetting("minute", 0, minuteColor);
     sendSetting("second", 0, secondColor);
-    //  sendSnoozeTimes();
 }
 
 messaging.peerSocket.onopen = evt => {
 
     console.log("Companion is ready");
-    sendConfiguration();
+    setTimeout(sendConfiguration, 2 * 1000);
+//    sendConfiguration();
     //  formatReturnData();
 }
 
@@ -947,7 +1035,7 @@ catch(err) {
 
 console.log("at bgurgentlow");
 try {
-    BGUrgentLow = parseInt(JSON.parse(settingsStorage.getItem("urgentLow")).name);
+    BGUrgentLow = parseFloat(JSON.parse(settingsStorage.getItem("urgentLow")).name);
     console.log(`BGUrgentLow=${BGUrgentLow}`);
 }
 catch(err) {
@@ -958,12 +1046,12 @@ try {
     console.log(`urgentLowColor=${urgentLowColor}`);
 }
 catch(err) {
-    urgentLowColor = "white";
+    urgentLowColor = "red";
 }
 
 console.log("at bglow");
 try {
-    BGLow = parseInt(JSON.parse(settingsStorage.getItem("low")).name);
+    BGLow = parseFloat(JSON.parse(settingsStorage.getItem("low")).name);
     console.log(`BGLow=${BGLow}`);
 }
 catch(err) {
@@ -975,7 +1063,7 @@ try {
     console.log(`lowColor=${lowColor}`);
 }
 catch(err) {
-    lowColor = "white";
+    lowColor = "pink";
 }
 
 try {
@@ -983,12 +1071,12 @@ try {
     console.log(`inRangeColor=${inRangeColor}`);
 }
 catch(err) {
-    inRangeColor = "white";
+    inRangeColor = "lightgreen";
 }
 
 console.log("at bghigh");
 try {
-    BGHigh = parseInt(JSON.parse(settingsStorage.getItem("high")).name);
+    BGHigh = parseFloat(JSON.parse(settingsStorage.getItem("high")).name);
     console.log(`BGHigh=${BGHigh}`);
 }
 catch(err) {
@@ -999,12 +1087,12 @@ try {
     console.log(`highColor=${highColor}`);
 }
 catch(err) {
-    highColor = "white";
+    highColor = "lightblue";
 }
 
 console.log("at bgurgenthigh");
 try {
-    BGUrgentHigh = parseInt(JSON.parse(settingsStorage.getItem("urgentHigh")).name);
+    BGUrgentHigh = parseFloat(JSON.parse(settingsStorage.getItem("urgentHigh")).name);
     console.log(`BGUrgentHigh=${BGUrgentHigh}`);
 }
 catch(err) {
@@ -1015,12 +1103,12 @@ try {
     console.log(`urgentHighColor=${urgentHighColor}`);
 }
 catch(err) {
-    urgentHighColor = "white";
+    urgentHighColor = "violet";
 }
 
 console.log("at bgdiff");
 try {
-    BGDiff = parseInt(JSON.parse(settingsStorage.getItem("diff")).name);
+    BGDiff = parseFloat(JSON.parse(settingsStorage.getItem("diff")).name);
     console.log(`BGDiff=${BGDiff}`);
 }
 catch(err) {}
@@ -1034,7 +1122,7 @@ catch(err) {
 }
 
 try {
-    longDiff = parseInt(JSON.parse(settingsStorage.getItem("longDiff")).name);
+    longDiff = parseFloat(JSON.parse(settingsStorage.getItem("longDiff")).name);
     console.log(`longDiff=${longDiff}`);
 }
 catch(err) {
@@ -1095,10 +1183,13 @@ let alarmSnooze = [10,20,30,40,50,60,90,120];
 for (let i = 0 ; i < 8; i++) {
     try {
         let as = JSON.parse(settingsStorage.getItem("alarmsnooze"+i.toString()));
-        if (as > 0) {
-            alarmSnooze[i] = as;
+        //console.log(`as=${as.name}`);
+        if (parseInt(as.name) > 0) {
+            alarmSnooze[i] = parseInt(as.name);
+            //console.log(`alarmsnooze[${i}]=${alarmSnooze[i]}`);
         } else {
             settingsStorage.setItem("alarmsnooze"+i.toString(), JSON.stringify({"name": alarmSnooze[i].toString()}));
+            //console.log(`>>>>>>>> alarmsnooze error ${i}`);
         }
     } catch(err) {}
 }
@@ -1108,8 +1199,8 @@ let BGSnooze = [20,40,60,90,120,180,240,480];
 for (let i = 0 ; i < 8; i++) {
     try {
         let bgs = JSON.parse(settingsStorage.getItem("bgsnooze"+i.toString()));
-        if (bgs > 0) {
-            BGSnooze[i] = bgs;
+        if (parseInt(bgs.name) > 0) {
+            BGSnooze[i] = parseInt(bgs.name);
         } else {
             settingsStorage.setItem("bgsnooze"+i.toString(), JSON.stringify({"name": BGSnooze[i].toString()}));
         }
@@ -1120,6 +1211,18 @@ console.log("at units");
 let toggleValue = settingsStorage.getItem("units");
 units = (toggleValue === 'true') ? "mmol/L" : "bg/dl";
 console.log(`Got initial value of units as ${units}`);
+
+console.log("at useLocal");
+let useLocal = settingsStorage.getItem("local");
+console.log(`Got initial value of useLocal as ${useLocal}`);
+
+console.log("at localApp");
+let localApp = settingsStorage.getItem("localapp");
+console.log(`Got initial value of localApp as ${localApp}`);
+
+console.log("at onlyUrgent");
+let onlyUrgent = settingsStorage.getItem("urgent");
+console.log(`Got initial value of onlyUrgent as ${onlyUrgent}`);
 
 console.log("at warnstart");
 var warnStart;
@@ -1172,18 +1275,26 @@ catch(err) {}
 if (!secondColor)
     secondColor = "red";
 
-try {
-    let loghere = JSON.parse(settingsStorage.getItem("log")).name;
-} catch (err) {
-    fetch("https://peacock.place/cgi-bin/cgm.cgi?simplecgm");
-    settingsStorage.setItem("log", JSON.stringify({"name": "here"}));
+console.log("All other initialization depends upon comm channel coming up.");
+
+function logusage(usage) {
+    fetch(`https://peacock.place/cgi-bin/cgm.cgi?app=${appName()}&runs=${usage}`);
 }
 
-console.log("All other initialization depends upon comm channel coming up.");
-console.log(`random is ${Math.random()}`);
+const DAYS = 24 * 60 * 60 * 1000;
 
-import registerDevice from "./device.js";
-registerDevice();
+try{settingsStorage.removeItem("log")}catch(err){} // first attempt - remove it now
+let usage = 1;                                     // init.
+let now = new Date();
+try {
+    let n = JSON.parse(settingsStorage.getItem("usage"));
+    usage = parseInt(n.runs) + 1;
+
+    if (now.getTime() - n.date > (30 * DAYS)) logusage(usage);
+} catch (err) {
+    logusage(usage);                 // initial use
+}
+settingsStorage.setItem("usage", JSON.stringify({"date": now.getTime(), "runs": usage}));
 
 //me.onWakeInterval = () => onWakeup();
 //me.wakeInterval = 10 * 60 * 1000;

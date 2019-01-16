@@ -1,0 +1,10 @@
+*~
+analog-cgm-testing
+radial-cgn-testing
+orbits-ns-testing
+*#
+build
+node_modules
+*diff*
+*.old
+*.orig

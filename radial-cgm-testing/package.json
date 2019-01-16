@@ -1,0 +1,32 @@
+{
+  "name": "radial-cgm-testing",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fitbit/sdk": "~1.0.5",
+    "@fitbit/sdk-cli": "^1.5.0"
+  },
+  "fitbit": {
+    "appUUID": "5567346e-1832-4253-99dd-b12ec4a60fbb",
+    "appType": "clockface",
+    "appDisplayName": "Radial CGM Testing",
+    "iconFile": "resources/icon.png",
+    "wipeColor": "#ffffff",
+    "requestedPermissions": [],
+    "requestedPermissions": [
+      "access_internet",
+      "run_background"
+    ],
+    "buildTargets": [
+      "higgs",
+      "meson"
+    ],
+    "i18n": {},
+    "defaultLanguage": "en-US"
+  },
+  "scripts": {
+      "build": "../uglify-build.sh ; fitbit-build",
+      "debug": "fitbit"
+  }
+}

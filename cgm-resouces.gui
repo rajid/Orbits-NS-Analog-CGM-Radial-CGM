@@ -20,14 +20,10 @@
   <image id="circle" href="calibrate.png" x="$-25" y="$-25" height="25" width="25" display="none" fill="white"/>
   <text id="sgv" pointer-events="visible" x="0" y="100%-2" text-anchor="start" font-size="40" fill="white"
         opacity="1" display="none">
-    100
+    000 mins old
   </text>
-  <text id="fails" x="5" y="30" font-size="30" fill="white" opacity="0">88</text>
+  <rect id="sgvbutton" pointer-events="visible" x="0" y="235" width="65" height="65" opacity="0" />
   
-<!--
-  <arc id="update" x="100%-30" y="5" fill="green" width="30" height="30" arc-width="7"
-       start-angle="0" sweep-angle="0" display="none"/>
--->
   <circle id="state" cx="100%-15" cy="15" r="10" fill="white" display="none"/>
   <rect id="forceUpdate" pointer-events="visible" x="100%-65" y="0" width="65" height="65" opacity="0" />
   <svg id="menu" x="0" y="5" width="65" height="65" opacity="1">
@@ -38,10 +34,10 @@
    </svg>
 
 <!-- Overlay for Alarm notices -->
-  <rect id="noteBG" x="0" y="0" width="100%" height="100%" fill="black" display="none"/>
+  <rect id="noteBG" x="0" y="0" width="100%" height="100%" fill="white" display="none"/>
   <text id="noteTime" text-anchor="middle" x="50%" y="25"  display="none">88:88</text>
-  <textarea id="noteMess" text-anchor="start" x="10" y="30" width="100%-10" text-length="200"  font-size="40" display="none"
-            fill="white"/>
+  <textarea id="noteMess" text-anchor="start" x="10" y="30" width="100%-10" text-length="200"
+            font-size="40" display="none" fill="black" />
   <use id="dismiss" href="#square-button" y="75%" width="50%" fill="black"  display="none">
     <set href="#text" attributeName="text-buffer" to="Dismiss" />
     <set href="#text" attributeName="fill" to="black"/>
@@ -52,9 +48,9 @@
   </use>
 
   <svg id="timerWindow" display="none">
-  <rect id="timerBG" x="0" y="0" width="100%" height="100%" fill="white"/>
-  <text id="timer" text-anchor="middle" x="50%" y="50%" font-size="40">88:88</text>
- </svg>
+    <rect id="timerBG" x="0" y="0" width="100%" height="100%" fill="white"/>
+    <text id="timer" text-anchor="middle" x="50%" y="50%" font-size="40">88:88</text>
+  </svg>
 
   <svg id="snoozeTimes" display="none">
     <rect x="0" y="0" height="100%" width="100%" fill="black" />
@@ -220,7 +216,7 @@
 <use id="noticeDismiss" pointer-events="visible" href="#square-button" x="50%+5" y="100%-45" width="50%"
        height="50" fill="fb-red" display="none">
   <set href="#text" attributeName="text-buffer" to="Dismiss" />
-  <set href="#text" attributeName="fill" to="white"/>
+  <set href="#text" attributeName="fill" to="black"/>
 </use>
 
 <!--  <g id="arrow" transform="translate(150,150)" > -->
