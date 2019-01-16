@@ -25,7 +25,7 @@
         opacity="1" display="none">
     000 mins old
   </text>
-  <rect id="sgvbutton" pointer-events="visible" x="0" y="$-65" width="65" height="65" opacity="0" />
+  <rect id="sgvbutton" pointer-events="visible" x="0" y="235" width="65" height="65" opacity="0" />
   
   <circle id="state" cx="100%-15" cy="15" r="10" fill="white" display="none"/>
   <rect id="forceUpdate" pointer-events="visible" x="100%-65" y="0" width="65" height="65" opacity="0" />
