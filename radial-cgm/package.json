@@ -4,8 +4,8 @@
   "private": true,
   "license": "UNLICENSED",
   "devDependencies": {
-    "@fitbit/sdk": "~1.0.3",
-    "@fitbit/sdk-cli": "^1.0.2"
+    "@fitbit/sdk": "~3.1.0",
+    "@fitbit/sdk-cli": "^1.6.0"
   },
   "fitbit": {
     "appUUID": "0173730e-5381-4495-bc6e-6ec93c8df029",
@@ -19,11 +19,14 @@
     ],
     "buildTargets": [
       "higgs",
-      "meson"
+      "meson",
+      "gemini"
     ],
-    "i18n": {}
+    "i18n": {},
+    "defaultLanguage": "en-US"
   },
   "scripts": {
-    "build": "../uglify-build.sh ; fitbit-build"
+    "build": "../uglify-build.sh ; fitbit-build",
+    "debug": "fitbit"
   }
 }

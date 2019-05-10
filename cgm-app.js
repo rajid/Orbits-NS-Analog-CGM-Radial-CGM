@@ -1,12 +1,12 @@
 import clock from "clock";
-import document from "document";
+import doc from "document";
 import {
     me as watch
 } from "appbit";
 import {
     me as device
 } from "device";
-import * as messaging from "messaging";
+import * as msg from "messaging";
 import * as util from "../common/utils";
 // Setup a message for later
 import {
@@ -35,7 +35,8 @@ import {
 } from "power";
 
 //let dashes=[5,50,5, 300, 5,100,5, 300, 5,100,5];
-let dashes=[5, 300, 5, 300, 5];
+//let dashes=[5, 300, 5, 300, 5];
+let dashes=[300, 300];
 
 /*
  * Remove all console messages for production code
@@ -46,22 +47,20 @@ let dashes=[5, 300, 5, 300, 5];
 
 //let alertColor = "green"; // normal
 
-memory.monitor.onmemorypressurechange = function(evt) {
+memory.monitor.onmemorypressurechange = function() {
     //console.log(`Pressure = ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
-    state.x = screenWidth - 15;
-    state.y = 15;
+//    state.x = screenWidth - 15;
+//    state.y = 15;
     switch(memory.monitor.pressure){
     case "normal":
-        state.r = 10;
-        break;
     case "high":
         state.r = 10;
         break;
     case "critical":
         //console.log("critical");
-        state.r = 20;
-        state.cx = screenWidth - 25;
-        state.cy = 25;
+        state.r = 30;
+//        state.cx = screenWidth - 25;
+//        state.cy = 25;
         break;
     }
 }
@@ -91,15 +90,15 @@ function bgStandardUnits(bg) {
     }
 }
 
-let noteBG = document.getElementById("noteBG");
-let noteMess = document.getElementById("noteMess");
-let noteTime = document.getElementById("noteTime");
+let noteBG = doc.getElementById("noteBG");
+let noteMess = doc.getElementById("noteMess");
+let noteTime = doc.getElementById("noteTime");
 //var messTimeout;
-let dismissButton = document.getElementById("dismiss");
-let snoozeButton = document.getElementById("snooze");
+let dismissButton = doc.getElementById("dismiss");
+let snoozeButton = doc.getElementById("snooze");
 
 var alarms = [];
-var messages = [];
+//var messages = [];
 var regTimeouts = [];
 var snoozes = [];
 var snoozeTimeouts = [];
@@ -116,27 +115,28 @@ if (!device.screen) device.screen = {
 const screenWidth = device.screen.width;
 const screenHeight = device.screen.height;
 
-// Update the clock every second
-clock.granularity = "seconds";
-
 import { clockFace } from "./clock.js";
 let myClock = new clockFace();
 
-let month = document.getElementById("month");
-let date = document.getElementById("date");
-let hour = document.getElementById("hour");
-let minute = document.getElementById("minute");
+let appname = myClock.appName();
+let rad = (appname == "radialcgm") ? 1 : 0;
+let orb = (appname == "orbitsns") ? 1 : 0;
 
-let arrow = document.getElementById("arrow");
-let circle = document.getElementById("circle"); // for calibrated values
-let sgv = document.getElementById("sgv");
-let sgvbutton = document.getElementById("sgvbutton");
-//let update = document.getElementById("update");
-let state = document.getElementById("state");
-let forceUpdate = document.getElementById("forceUpdate");
+// Update the clock every second
+//console.log(`orb is ${orb}`);
+clock.granularity = orb ? "minutes" : "seconds";
+//console.log(`granularity = ${clock.granularity}`);
 
-let cornerTime = 0; // init
-let cornerTimeInit = 5; // time to display numbers in corners
+let arrow = doc.getElementById("arrow");
+let circle = doc.getElementById("circle"); // for calibrated values
+let sgv = doc.getElementById("sgv");
+let sgvbutton = doc.getElementById("sgvbutton");
+//let update = doc.getElementById("update");
+let state = doc.getElementById("state");
+let forceUpdate = doc.getElementById("forceUpdate");
+
+let cornerEnd = 0; // init
+//let cornerTimeInit = 5; // time to display numbers in corners
 
 /*
  * Display a graph - Detailed display of BG data
@@ -150,20 +150,9 @@ var graphCOB;
 var graphDismiss;
 var graphReturn;
 
-/*
-// Only used in Radial CGM
-var arcIn;
-var arcAbove;
-var arcBelow;
-var timeAbove;
-var timeIn;
-var timeBelow;
-*/
-
 //console.log(`appname is ${myClock.appName()}`);
-let rad = (myClock.appName() == "radialcgm") ? 1 : 0;
 try {
-    graphWindow = document.getElementById("graphWindow");
+    graphWindow = doc.getElementById("graphWindow");
     graphIOB = graphWindow.getElementById("graphIOB");
     graphCOB = graphWindow.getElementById("graphCOB");
     
@@ -173,7 +162,7 @@ try {
     graphDismiss.onclick = dismissGraph;
     
     if (rad) {
-        docGraph = document.getElementById("docGraph");
+        docGraph = doc.getElementById("docGraph");
     } else {
         docGraph = graphWindow.getElementById("docGraph");
     }
@@ -194,8 +183,8 @@ forceUpdate.onclick = function() {
  * So...  Let's make sure that when the display turns on we trigger
  * getting a fresh value, if we don't have one.
  */
-function displayChange(evt) {
-    let now = new Date();
+function displayChange() {
+    now = new Date();
 
     if (display.on && nsConfigured && (bgNext < now.getTime())) {
         wakeupFetch();
@@ -206,18 +195,20 @@ display.addEventListener("change", displayChange);
 
 
 let nsConfigured = false;
-var BG = [];
+//var BG = [];
+var BGval = [];
+var BGdate = [];
 let bgUnits = "bg/dl"; // default
 let bgVal = 0;
 let bgDate = 0;
 let bgPeriod = 0;
 let bgNext = 0;
 let bgDelta = 0;
-let bgLast = 0;
+//let bgLast = 0;
 let IOB = 0;
 let COB = 0;
-let bgFont1 = 40; // init.
-let calibration = false; // signals the latest values were due to calibration
+//let bgFont1 = 40; // init.
+//let calibration = false; // signals the latest values were due to calibration
 let BGUrgentLow = 0;
 let BGLow = 0;
 let BGHigh = 0;
@@ -264,32 +255,31 @@ function bgLower(v) {
 const rangeHighest = screenHeight * 1.0;
 const rangeLowest = screenHeight * 0.55;
 
-// Rotate the hands every tick
-function updateClock() {
-    let today = new Date();
-    fullhours = today.getHours();
-    //    let hours = fullhours % 12;
-    mins = today.getMinutes();
-    //    let secs = today.getSeconds();
-    //    let weekday = today.getDay();
-    mondate = today.getDate();
-    mon = today.getMonth() + 1;
 
-    if (charger.connected) {
-        display.poke();
-    }
-
-    myClock.updateClock(rangeHighest, rangeLowest, cometTime);
+function updateCorners() {
+    now = new Date();
+    let month = doc.getElementById("month");
+    let date = doc.getElementById("date");
+    let hour = doc.getElementById("hour");
+    let minute = doc.getElementById("minute");
 
     /*
      * Update corner numbers, if we're showing them
      */
-    if (cornerTime > 0) {
+    if (now.getTime() < cornerEnd) {
         month.text = `${mon}`;
         date.text = `${mondate}`;
         hour.text = `${fullhours}`;
         minute.text = `${util.zeroPad(mins)}`;
-        cornerTime--;
+        month.style.display = "inline";
+        date.style.display = "inline";
+        hour.style.display = "inline";
+        minute.style.display = "inline";
+        arrow.style.display = "none";
+        sgv.style.display = "none";
+        state.style.display = "none";
+        circle.style.display = "none";
+        menu.style.display = "none";
     } else {
         month.style.display = "none";
         date.style.display = "none";
@@ -297,24 +287,30 @@ function updateClock() {
         minute.style.display = "none";
 
         if (nsConfigured) {
-            arrow.style.display = "inline";
-            sgv.style.display = "inline";
+            updateNS();
+//            arrow.style.display = "inline";
+//            sgv.style.display = "inline";
             state.style.display = "inline";
         }
         menu.style.display = "inline";
+        cornerEnd = 0;
     }
+}
+
+
+function updateNS() {
+    now = new Date();
 
     /*
      * Update Nightscout related info, if configured
      */
-    if (nsConfigured && cornerTime <= 0) {
+    if (nsConfigured && cornerEnd == 0 && bgDate != 0) {
         // Display the correct sgv value
         sgv.text = `${bgValue()}`;
-        sgv.style.fontSize = bgFont1;
+//        sgv.style.fontSize = bgFont1;
         sgv.style.fill = myGraph.setColor(bgValue());
 
         // Set opacity for how long it's been here
-        let now = new Date();
         let age = now.getTime() - bgDate;
         let opacity = 1.0;
         age /= (1000 * 60);
@@ -352,10 +348,12 @@ function updateClock() {
         if (angle > 180) {
             angle = 180
         }
-        if (calibration) {
+//        if (calibration) {
+        if (lastCalibration > lastDispCal) {
             circle.style.display = "inline";
             arrow.style.display = "none";
             setArrowColor(circle);
+            lastDispCal = now.getTime();
         } else {
             circle.style.display = "none";
             arrow.style.display = "inline";
@@ -364,6 +362,11 @@ function updateClock() {
             arrow.style.opacity = opacity;
         }
 
+        updateFetches();
+    }
+}
+
+function updateFetches() {
         // Update our status dot (failedFetches is reset to 0 once a msg works)
         if (failedFetches > 0) {
             state.style.fill = "red";
@@ -372,7 +375,35 @@ function updateClock() {
         } else {
             state.style.fill = "white"; // indeterminate
         }
-    }
+}
+
+
+charger.onchange=pokeDisp;
+function pokeDisp() {
+
+    display.poke();
+    
+    if (charger.connected)
+        setTimeout(pokeDisp, 5*1000);
+}
+
+// Rotate the hands every tick
+function updateClock() {
+    let today = new Date();
+    fullhours = today.getHours();
+    //    let hours = fullhours % 12;
+    mins = today.getMinutes();
+    //    let secs = today.getSeconds();
+    //    let weekday = today.getDay();
+    mondate = today.getDate();
+    mon = today.getMonth() + 1;
+
+    myClock.updateClock(rangeHighest, rangeLowest, cometTime);
+
+//    updateCorners();
+
+//    updateNS();
+
 //    console.log(`JS memory: ${(memory.js.used / memory.js.total)*100}`);
 }
 
@@ -412,11 +443,13 @@ function inRange(start, end, now) {
 
 function vibNudge(now) {
     
+    console.log("**** VibNudge *****")
     if (now == 0 || (!inRange(warnSuppressStart, warnSuppressEnd, now) &&
                      (commSnoozeEnd == 0 || commSnoozeEnd < now.getTime()))) {
         //console.log(`**** Not in Range`);
         //vibration.start("nudge-max"); // get some attention
         vibPattern(dashes);
+//        updateNS();
         display.poke();
     }
 }
@@ -454,11 +487,11 @@ let warnSuppressStart = {def: false};
 let warnSuppressEnd = {def: false};
 function fetchCompanionData(cmd) {
     var worked;
-    let now = new Date();
+    now = new Date();
 
-    if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
+    if (msg.peerSocket.readyState === msg.peerSocket.OPEN) {
         // Send a command to the companion
-        messaging.peerSocket.send({
+        msg.peerSocket.send({
             command: cmd
         });
         lastFetch = now.getTime();
@@ -471,6 +504,7 @@ function fetchCompanionData(cmd) {
         worked = false;
     }
 
+    updateFetches();
     // If we have seen too many failures, we're tracking BG values,
     // and we're not in the quiet time range, and we haven't
     // snoozed comm channel warnings, then tell us about this.
@@ -484,30 +518,18 @@ function fetchCompanionData(cmd) {
 
 
 // Dealing with displaying numbers in the corners on touch
-var wholeScreen = document.getElementById("clicker");
+var wholeScreen = doc.getElementById("clicker");
 wholeScreen.onclick = function(e) {
     //console.log("click");
     
-    if (cornerTime == 0) {
-        month.text = `${mon}`;
-        date.text = `${mondate}`;
-        hour.text = `${fullhours}`;
-        minute.text = `${mins}`;
-
-        month.style.display = "inline";
-        date.style.display = "inline";
-        hour.style.display = "inline";
-        minute.style.display = "inline";
-
-        arrow.style.display = "none";
-        sgv.style.display = "none";
-        state.style.display = "none";
-        circle.style.display = "none";
-        menu.style.display = "none";
-
-        cornerTime = cornerTimeInit; // display corners for this many seconds
+    if (cornerEnd == 0) {
+        cornerEnd = new Date();
+        cornerEnd = cornerEnd.getTime() + (5 /* cornerTimeInit */ * 1000);
+        setTimeout(updateCorners, 5 /* cornerTimeInit */ * 1000);
+        updateCorners();
     } else {
-        cornerTime = 0;
+        cornerEnd = 0;
+        updateCorners();
     }
 }
 
@@ -565,9 +587,10 @@ function wakeupFetch() {
  * See if a BG warning is needed
  */
 function testLimits() {
-    var bg;
-    let now = new Date();
+//    var bg;
+    now = new Date();
 
+//    console.log(`testlimits high=${BGHigh}`);
     if ((bgHigher(BGHigh) && now.getTime() >= BGHighSnooze)||
         (bgLower(BGLow) && now.getTime() >= BGLowSnooze) ||
         (bgHigher(BGUrgentHigh) && now.getTime() >= BGUrgentHighSnooze) ||
@@ -596,20 +619,28 @@ let longDiff = 0;
 let longTimeAlert = false;
 function longTimeCheck(now) {
 
+    //console.log("Long time check");
     longTimeAlert = false;
 
     if (longPeriod == 0 || longDiff == 0) return;
     
     var i;
-    let longTime = util.Min2ms(longPeriod);
-    for (i = 0 ; i < BG.length && (now.getTime() - BG[i].d) < longTime ; i++) {
-        if (BG.cal) return; // abort if we cross a calibrarion
+    let longTime = longPeriod * 60 * 1000;
+    //console.log(`..........lastCalibration = ${lastCalibration}`);
+    //console.log(`bg array len is ${BGdate.length}`);
+    for (i = 0 ; i < BGdate.length && (now.getTime() - BGdate[i]) < longTime ; i++) {
+        if (lastCalibration >= BGdate[i]) {
+            //console.log(`breaking out.......... ${lastCalibration} ${BGdate[i]}`);
+            return;
+        }
     }
-    if (--i <= 0) return;
+    //console.log(`now is ${now.getTime()} - bgdate is ${BGdate[i]}`);
+    //console.log(`i = ${i}`);
 
     try {
-        let t = new Date(BG[i].d);
-        if (Math.abs(bgValue() - bgCorrectValue(BG[i].s)) > longDiff) {
+        //console.log(`latest BG is ${bgValue()} - 20 min ago was index ${i} at ${bgCorrectValue(BGval[i])}`);
+        //console.log(`.... diff is ${Math.abs(bgValue() - bgCorrectValue(BGval[i]))}`);
+        if (Math.abs(bgValue() - bgCorrectValue(BGval[i])) > longDiff) {
             longTimeAlert = true;
             vibNudge(now);
         }
@@ -621,6 +652,7 @@ function longTimeCheck(now) {
  */
 function nightScout(val) {
 
+    //console.log("nightScout");
     if (val == 1) {
         if (nsConfigured == false) {
             //console.log("ns switching from false to true");
@@ -638,7 +670,7 @@ function nightScout(val) {
         circle.style.display = "none";
     }
     //console.log(`nsConfigured = ${nsConfigured}`);
-    
+    updateNS();
 }
 
 /*
@@ -646,122 +678,99 @@ function nightScout(val) {
  */
 function resetSnoozes() {
 
-    if (bgHigher(BGUrgentLow+5)) BGUrgentLowSnooze = 0;
-    if (bgHigher(BGLow+5)) BGLowSnooze = 0;
-    if (bgLower(BGUrgentHigh-5)) BGUrgentHighSnooze = 0;
-    if (bgLower(BGHigh-5)) BGHighSnooze = 0;
+    if (bgHigher(BGUrgentLow+1)) BGUrgentLowSnooze = 0;
+    if (bgHigher(BGLow+1)) BGLowSnooze = 0;
+    if (bgLower(BGUrgentHigh-1)) BGUrgentHighSnooze = 0;
+    if (bgLower(BGHigh-1)) BGHighSnooze = 0;
 }
 
 /*
  * Receive messages
  */
 //let savedLastBG = 1;
-var lastWasCalibrarion;
-messaging.peerSocket.onmessage = evt => {
-    let now = new Date();
+//var lastWasCalibration;
+//let saveCalibration = false;
+let lastCalibration = 0; // init.
+msg.peerSocket.onmessage = evt => {
+    now = new Date();
 
-    //console.log("message for you, sir! " + evt.data.key);
+    console.log("mess: " + evt.data.key);
 
+    console.log(`Pres: ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
     switch (evt.data.key) {
     case "bg":
         failedFetches = 0; // Ok!  We have communication!            
         //console.log(`bgVal=${evt.data.bg}`);
         //console.log(`bgDate=${evt.data.date}`);
         //console.log(`bgPeriod=${evt.data.period}`);
-        //console.log(`bgDelta=${evt.data.delta}`);
         //console.log(`nextUpdate=${(evt.data.update - now.getTime())/60000} mins`);
         //console.log(`calibration=${evt.data.cal}`);
 
-        let x = now.getTime() - evt.data.date;
-        //console.log(`bgAge = ${x} = ${x/(60*1000)} mins`);
+        let saved = 0;
 
         if (evt.data.bg > 0) {
             bgVal = evt.data.bg;
             bgDate = evt.data.date;
             bgPeriod = evt.data.period;
             bgDelta = evt.data.delta;
-            calibration = evt.data.cal;
-
+            //console.log(`bgDelta=${bgDelta}`);
+            
             let bginterval=(5*60*1000);
-            var savebg;
             if (rad) bginterval=(10*60*1000);
-            try{
-                if (bgDate - BG[0].d >= bginterval)
-                    savebg=1;
-                else
-                    savebg=0;
-            }catch(e){savebg=1;}
+            
+            if (bgDate - BGdate[0] >= bginterval) {
+                saved = 1;  // we saved something
+                BGval.unshift(bgVal);
+                BGdate.unshift(bgDate);
+                console.log(`Saved ${bgVal}`);
+            }
+        }
 
-            // buzz if we're only seeing old data
-            if ((now.getTime() - bgDate) >= util.Min2ms(20) && 
-                (BGLow || BGHigh || BGUrgentLow || BGUrgentHigh)) {
+        while (BGdate.length > 0 &&
+               (BGdate.length > myGraph.maxBGs() ||
+                BGdate[BGdate.length-1] < (now.getTime() - (11*60*60*1000)))) {
+            BGval.pop();
+            if (BGdate.pop() > lastCalibration)
+                lastCalibration = 0;
+        }
+
+        // buzz if we're only seeing old data
+        if ((now.getTime() - bgDate) >= (20 * 60 * 1000) && 
+            (BGLow || BGHigh || BGUrgentLow || BGUrgentHigh)) {
+            vibNudge(now);
+        } else { // Got new data
+            resetSnoozes();
+
+            if (BGDiff > 0 && Math.abs(bgCorrectValue(bgDelta)) >= BGDiff) {
+                // Buzz if this is a "large" difference
                 vibNudge(now);
-            } else {
-                resetSnoozes();
-                if (!testLimits() && bgVal <= 40) {
-//                    warnBG();
-                    vibNudge(0); // always!
-                }
-                if (savebg == 1) {
-                    if (rad) {
-                        BG.unshift({s: bgVal, d:bgDate});
-                        //console.log(`Adding BG at beginning`);
-                        myGraph.updateRgraph(BG, screenHeight, screenWidth);
-                    } else {
-                        BG.unshift({
-                            s: bgVal,
-                            d: bgDate,
-                            c: calibration
-                        });
-                    }
-                }
-                //console.log(`BG length = ${BG.length}`);
-                while (BG.length > 0 &&
-                       (BG.length > myGraph.maxBGs() ||
-                        BG[BG.length-1].d < (now.getTime() - (11*60*60*1000)))) {
-                    let b = BG.pop();
-                    let d = new Date(b.d);
-                    //console.log(`Removed bg at ${d.toTimeString()}`);
+            } else if (!testLimits() && bgVal <= 40) {
+                vibNudge(0); // always!
+            } else
+                longTimeCheck(now);
+            
+            if (saved) {
+                if (showingGraph)
+                    updateGraph(BGval, BGdate);
+                if (rad) {
+//                    if (BGval.length < myGraph.maxBGs())
+//                        fetchCompanionData("graph");
+//                    else
+                        myGraph.updateRgraph(BGval, BGdate, screenHeight, screenWidth, lastCalibration);
                 }
             }
         }
+
+        // Schedule next fetch
         if (evt.data.update > 0) {
             bgNext = evt.data.update;
-            //                if (BGLow || BGHigh) {
-            // If we have low or high limits, then make sure we gather data
-            // at regular intervals
-            //console.log(`Setting wakeup for ${bgNext-now.getTime()} ms`);
-            
-            let d = new Date(bgNext);
-            //console.log(`at: ${d}`);
             
             if (fetchHandle) {
                 clearTimeout(fetchHandle);
             }
             fetchHandle = setTimeout(wakeupFetch, bgNext - now.getTime());
-            bgLast = now.getTime();
-        }
-        if (isNaN(bgDelta)) {
-            bgDelta = 0;
         }
 
-        if (calibration) {
-            //console.log("calibration");
-            //                vibration.start("nudge-max");
-            if (!lastWasCalibrarion) {
-                vibNudge(now);
-            }
-            lastWasCalibrarion = true;
-        } else {
-            lastWasCalibrarion = false;
-            if (BGDiff > 0 && Math.abs(bgCorrectValue(bgDelta)) >= BGDiff) {
-                // Buzz if this is a "large" difference
-                vibNudge(now);
-            } else longTimeCheck(now);
-        }
-        if (showingGraph) {
-            updateGraph(BG);
-        }
         nightScout(1); // obvously!
         break;
 
@@ -773,6 +782,7 @@ messaging.peerSocket.onmessage = evt => {
             clearTimeout(ackHandle); // Got our "ack"!
             ackHandle = 0;
         }
+        updateFetches();
         break;
 
     case "podchange":
@@ -817,21 +827,26 @@ messaging.peerSocket.onmessage = evt => {
         break;
 
     case "limits":
-        myGraph.setUL(bgStandardUnits(evt.data.UL));
-        myGraph.setL(bgStandardUnits(evt.data.L));
-        myGraph.setH(bgStandardUnits(evt.data.H));
-        myGraph.setUH(bgStandardUnits(evt.data.UH));
-        BGUrgentLow = evt.data.UL;
-        BGLow = evt.data.L;
-        BGHigh = evt.data.H;
-        BGUrgentHigh = evt.data.UH;
-        BGDiff = evt.data.diff;
-        myGraph.setULColor(evt.data.ULC);
-        myGraph.setLColor(evt.data.LC);
-        myGraph.setUHColor(evt.data.UHC);
-        myGraph.setHColor(evt.data.HC);
-        myGraph.setIRColor(evt.data.IRC);
-        myGraph.updateRgraph(BG, screenHeight, screenWidth);
+        let ul=evt.data.UL;
+        let l=evt.data.L;
+        let h=evt.data.H;
+        let uh=evt.data.UH;
+        let d=evt.data.diff;
+        myGraph.setUL(bgStandardUnits(ul));
+        myGraph.setL(bgStandardUnits(l));
+        myGraph.setH(bgStandardUnits(h));
+        myGraph.setUH(bgStandardUnits(uh));
+        BGUrgentLow = ul;
+        BGLow = l;
+        BGHigh = h;
+        BGUrgentHigh = uh;
+        BGDiff = d;
+        myGraph.setULC(evt.data.ULC);
+        myGraph.setLC(evt.data.LC);
+        myGraph.setUHC(evt.data.UHC);
+        myGraph.setHC(evt.data.HC);
+        myGraph.setIRC(evt.data.IRC);
+        myGraph.updateRgraph(BGval, BGdate, screenHeight, screenWidth, lastCalibration);
         writeLimitsInfo();
 
         testLimits();
@@ -840,6 +855,11 @@ messaging.peerSocket.onmessage = evt => {
     case "long":
         longPeriod = evt.data.period;
         longDiff = evt.data.diff;
+        break;
+
+    case "cal":
+        lastCalibration = evt.data.number;
+        //console.log(`calibration is ${lastCalibration}`);
         break;
 
     case "warn-start":
@@ -885,7 +905,7 @@ messaging.peerSocket.onmessage = evt => {
         break;
 
     case "bgFont1":
-        bgFont1 = evt.data.number;
+        sgv.style.fontSize = evt.data.number;
         break;
 
     case "bgsnooze": // configured bg notice "ignore" times
@@ -895,16 +915,35 @@ messaging.peerSocket.onmessage = evt => {
         writeFileSync("BGSnooze", bgSnoozeTimes, "json");
         break;
 
+    case "defBgSz":
+        defBgSz = evt.data.number;
+        break;
+
+    case "defAlmSz":
+        defAlmSz = evt.data.number;
+        break;
+
     case "ns": // is Nightscout configured?
         writeFileSync("ns", {nsconfigured: evt.data.number}, "json");
+        //console.log("Calling nightScout");
         nightScout(evt.data.number);
         break;
         
     case "graphdata":
-        BG = [];
-        BG = evt.data.data;
+//        BG = [];
+//        BG = evt.data.data;
+        let data = evt.data.data;
+        for (let i = 0 ; i < evt.data.data.length ; i++) {
+            BGval[i] = data[i].s;
+            BGdate[i] = data[i].d;
+            //console.log(`received cal is ${data[i].c}`);
+//            if (lastCalibration == 0 && data[i].c == 1) {
+                //console.log(`........... setting lastCalibration `);
+//                lastCalibration = data[i].d;
+//            }
+        }
         if (showingGraph) {
-            updateGraph(BG);
+            updateGraph(BGval, BGdate);
         }
         break;
 
@@ -948,7 +987,7 @@ messaging.peerSocket.onmessage = evt => {
 
 
 
-let timerWindow = document.getElementById("timerWindow");
+let timerWindow = doc.getElementById("timerWindow");
 function startTimer(value) {
     let timer = timerWindow.getElementById("timer");
     let timerHandle = 0;
@@ -984,7 +1023,7 @@ function startTimer(value) {
 /*
  * Comm channel is up - let's get started!
  */
-messaging.peerSocket.onopen = evt => {
+msg.peerSocket.onopen = evt => {
     //console.log("Watch is ready");
     if (nsConfigured) {
         wakeupFetch();
@@ -996,18 +1035,14 @@ messaging.peerSocket.onopen = evt => {
  * BG High and Low warning messages, and associated screens
  */
 
-let snoozeBGTimes = document.getElementById("snoozeBGTimes");
-var bgs = [];
-for (let i = 0; i < 8; i++) {
-    bgs[i] = snoozeBGTimes.getElementById(i.toString());
-}
+let snoozeBGTimes = doc.getElementById("snoozeBGTimes");
 //let BGTimeout = 0;
 let BGLowSnooze = 0;
 let BGHighSnooze = 0;
 let BGUrgentLowSnooze = 0;
 let BGUrgentHighSnooze = 0;
-let BGgraphButton = document.getElementById("BGgraph");
-let suppressButton = document.getElementById("suppress");
+let BGgraphButton = doc.getElementById("BGgraph");
+let suppressButton = doc.getElementById("suppress");
 
 function writeLimitsInfo() {
     writeFileSync("BGLimits", {
@@ -1031,7 +1066,7 @@ function BGSnooze(period) {
     // Return to normal screen
     snoozeBGTimes.style.display = "none";
 
-    let now = new Date();
+    now = new Date();
 
     if (bgLower(BGUrgentLow)) {
         BGUrgentLowSnooze = now.getTime() + period * (60 * 1000);
@@ -1074,9 +1109,10 @@ function snoozeBG() {
 
     // Set the snooze time selections
     for (let i = 0; i < 8; i++) {
-        bgs[i].getElementById("text").text = bgSnoozeTimes[i];
+        let bgs = snoozeBGTimes.getElementById(i.toString());
+        bgs.getElementById("text").text = bgSnoozeTimes[i];
         let j = bgSnoozeTimes[i];
-        bgs[i].onclick = function() {
+        bgs.onclick = function() {
             BGSnooze(j)
         };
     }
@@ -1104,7 +1140,7 @@ function warnBG() {
         if (snoozeBGTimes.style.display == "inline") return 0;
     }
 
-    let now = new Date();
+    now = new Date();
 /*
     if ((bgHigher(BGHigh) && now.getTime() < BGHighSnooze) &&
         (bgHigher(BGUrgentHigh) && now.getTime() < BGUrgentHighSnooze) &&
@@ -1139,6 +1175,13 @@ function warnBG() {
                     noteMess.text = `BG of ${bgValue()} is lower than limit of ${BGLow}`;
                     if (BGUrgentLow == 0) urgent = true; // make sure we see it in this case
                 }
+    if (!urgent && defBgSz > 0) {
+        noteMess.onclick = function() {
+            dismissBG();
+            BGSnooze(defBgSz);
+        }
+    } else noteMess.onclick = undefined;
+    
     noteMess.style.display = "inline";
 //    noteMess.style.fill = "black";
     noteMess.style.fontSize = 40;
@@ -1161,7 +1204,7 @@ function warnBG() {
     return 1;
 }
 
-
+    
 /*
  * Implementation of a custom vib pattern
  */
@@ -1175,8 +1218,8 @@ function vibPattern(list) {
     vibNext();
 }
 function vibNext() {
+    vibration.start("confirmation-max");
     if (vibIdx < vibList.length) {
-        vibration.start("confirmation-max");
         setTimeout(vibNext, vibList[vibIdx++]);
     }
 }
@@ -1187,14 +1230,14 @@ function vibNext() {
  */
 let showingGraph = false;
 function displayGraph() {
-    let now = new Date();
+    now = new Date();
     
     //console.log("displayGraph");
     showingGraph = true;
     myGraph.reset();
-    if (BG.length >= myGraph.maxBGs()) {
+    if (BGval.length >= myGraph.maxBGs()) {
         //console.log(`BG.length is ${BG.length}`);
-        updateGraph(BG);
+        updateGraph(BGval, BGdate);
     } else {
         // Gather some data for the graph
         //console.log(`Getting graph data because we don't have enough - length=${BG.length}`);
@@ -1214,13 +1257,16 @@ function BGshowGraph() {
  * Show an alarm message, and associated screens
  */
 function showAlarm(num) {
-    let now = new Date();
+    now = new Date();
 
     if (currAlarm != -1 && currAlarm != num) {
         //console.log(`Got alarm ${num}, but already showing ${currAlarm}`);
         return; // later, dude
     }
 
+    if (typeof alarms[num] == 'undefined')
+        return;
+    
     if (noticeDismiss.style.display != "none") {
         menuExit();
     }
@@ -1228,7 +1274,7 @@ function showAlarm(num) {
     currAlarm = num;
     noteBG.style.display = "inline";
     noteBG.style.fill = "white";
-    noteTime.text = `${alarms[num].value.hour}:${alarms[num].value.minute}`;
+    noteTime.text = `${alarms[num].hour}:${alarms[num].minute}`;
     noteTime.style.display = "inline";
 //    dismissButton.style.fill = "black";
     dismissButton.style.display = "inline";
@@ -1238,22 +1284,38 @@ function showAlarm(num) {
     dismissButton.onactivate = dismissText;
     snoozeButton.onactivate = snoozeActivate;
 
-    if (typeof messages[num] == 'undefined' ||
-        messages[num].value == "") {
-        noteMess.text = "<no text>";
-    } else {
-        noteMess.text = messages[num].value;
+    try{
+        let m = readFileSync("mess" + num, "json");
+        noteMess.text = m.message;
+    }catch(e){
+        noteMess.text = "<no message>";
     }
+
+
+//    if (typeof messages[num] == 'undefined' ||
+//        messages[num].value == "") {
+//        noteMess.text = "<no text>";
+//    } else {
+//        noteMess.text = messages[num].value;
+//    }
 //    noteMess.style.fill = "black";
     noteMess.style.display = "inline";
     noteMess.style.fontSize = 40;
+    if (defAlmSz > 0) {
+        noteMess.onclick = function() {
+            dismissSnooze();
+            //console.log(`def snooze for ${defAlmSz} mins`);
+            selectSnooze(defAlmSz);
+        }
+    } else noteMess.onclick = undefined;
 
     vibPattern(dashes);
     display.poke();
     doBuzz();
 //    setTimeout(alarmBuzz, 10 * 1000); // lather, rinse, repeat!
 
-    writeNote(currAlarm);
+//    writeNote(currAlarm, noteMess.text);
+//    writeNote(currAlarm);
 /*    
     writeFileSync("snooze", {
         number: currAlarm,
@@ -1282,16 +1344,16 @@ function alarmBuzz() {
 
 // Snooze an alarm
 function resetAlarm(i) {
-    let now = new Date();
+    now = new Date();
     let then = new Date();
 
-    then.setHours(alarms[i].value.hour, alarms[i].value.minute, 0);
+    then.setHours(alarms[i].hour, alarms[i].minute, 0);
     let diff = then.getTime() - now.getTime();
-    diff += (util.Hour2ms(24)); // move to tomorrow
+    diff += (24 * 60 * 60 * 1000); // move to tomorrow
     //console.log(`Resetting timeout in ${diff} ms`);
     
     regTimeouts[i] = setTimeout(onWakeup, diff, i);
-    snoozes[i] = now.getTime() + diff;
+//    snoozes[i] = now.getTime() + diff;
 }
 
 
@@ -1303,6 +1365,7 @@ function onWakeup(handle) {
     if (regTimeouts[handle] >= 0) {
         // Continue with current alarm
         showAlarm(handle);
+        resetAlarm(handle);
         return;
     }
 
@@ -1313,11 +1376,11 @@ function onWakeup(handle) {
         return;
     }
 
-    let now = new Date();
-    var i;
-    for (i = 0; i < alarms.length; i++) {
-        if (alarms[i] && alarms[i].value.hour == now.getHours() &&
-            alarms[i].value.minute == now.getMinutes()) {
+    now = new Date();
+//    var i;
+    for (let i = 0; i < alarms.length; i++) {
+        if (alarms[i] && alarms[i].hour == now.getHours() &&
+            alarms[i].minute == now.getMinutes()) {
             currAlarm = i;
             showAlarm(i);
             resetAlarm(i);
@@ -1329,7 +1392,7 @@ function onWakeup(handle) {
 }
 
 function overlapAlarm() {
-    let now = new Date();
+    now = new Date();
     
     for (let i = 0 ; i < 10 ; i++) {
         if (snoozes[i] > 0 && snoozes[i] - now.getTime() < 0) {
@@ -1344,7 +1407,7 @@ function overlapAlarm() {
 // Invoked when the Dismiss button is pressed
 function dismissText() {
 
-    let now = new Date();
+    now = new Date();
 
     //console.log("Dismiss");
     
@@ -1364,6 +1427,7 @@ function dismissText() {
 //    currSnooze = 0;
     lastAlarm = currAlarm; // so we can get it back again, if needed
 
+//    writeNote(currAlarm, noteMess.text);
     writeNote(currAlarm);
 
     /* If any alarm has a "snoozes" time in the past, run it now */
@@ -1390,16 +1454,17 @@ function selectSnooze(index) {
 
     //console.log(`resetting alarm for snooze of ${snoozeTime} mins`);
     
-    let now = new Date();
+    now = new Date();
     clearAlarm(currAlarm);
 //    clearTimeout(snoozeTimeouts[currAlarm]);
-    snoozes[currAlarm] = now.getTime() + util.Min2ms(snoozeTime);
-    snoozeTimeouts[currAlarm] = setTimeout(onWakeup, util.Min2ms(snoozeTime), currAlarm);
+    snoozes[currAlarm] = now.getTime() + (snoozeTime * 60 * 1000);
+    snoozeTimeouts[currAlarm] = setTimeout(onWakeup, snoozeTime * 60 * 1000, currAlarm);
     //console.log(`curr Timeout Handle = ${regTimeouts[currAlarm]}`);
     
     //console.log(`currAlarm=${currAlarm}`);
     lastAlarm = currAlarm;
     
+//    writeNote(currAlarm, noteMess.text);
     writeNote(currAlarm);
     overlapAlarm();
     currAlarm = -1;
@@ -1413,19 +1478,20 @@ function selectSnooze(index) {
     snoozeTimes.style.display = "none";
 }
 
-let snoozeTimes = document.getElementById("snoozeTimes");
+let snoozeTimes = doc.getElementById("snoozeTimes");
+/*
 var sts = [];
 for (let i = 0; i < 8; i++) {
     sts[i] = snoozeTimes.getElementById(i.toString());
 }
+*/
 
 // Invoked when the "Snooze" button is pressed
 function snoozeActivate() {
     snoozeText("BG");
 }
-function snoozeText(type) {
-    //console.log("Snooze");
 
+function dismissSnooze(){
     menuWindow1.style.display = "none";
     menuWindow2.style.display = "none";
     noteMess.style.display = "none";
@@ -1436,6 +1502,13 @@ function snoozeText(type) {
 
     clearTimeout(buzzTimeout);
     vibration.stop();
+}
+
+
+function snoozeText(type) {
+    //console.log("Snooze");
+
+    dismissSnooze();
 
     switch (type) {
     case "BG":
@@ -1449,18 +1522,19 @@ function snoozeText(type) {
     
     // Set the snooze time selections
     for (let i = 0; i < 8; i++) {
-        sts[i].getElementById("text").text = alarmSnoozeTimes[i];
+        let sts = snoozeTimes.getElementById(i.toString());
+        sts.getElementById("text").text = alarmSnoozeTimes[i];
         //        //console.log(`alarmsnoozetimes[$i}] = ${alarmSnoozeTimes[i]}`);
         
         let j = alarmSnoozeTimes[i];
         switch (type) {
         case "BG":
-            sts[i].onclick = function() {
+            sts.onclick = function() {
                 selectSnooze(j)
             };
             break;
         case "comm":
-            sts[i].onclick = function() {
+            sts.onclick = function() {
                 commSnooze(j)
                 //console.log("comm snooze");
             };
@@ -1475,10 +1549,10 @@ function snoozeText(type) {
 
 let commSnoozeEnd = 0;
 function commSnooze(time) {
-    let now = new Date();
+    now = new Date();
     
     //console.log(`commSnooze time is ${time}`);
-    commSnoozeEnd = now.getTime() + (util.Min2ms(time));
+    commSnoozeEnd = now.getTime() + (time * 60 * 1000);
     let d = new Date(commSnoozeEnd);
     //console.log(`ending comm snooze at ${d}`);
 
@@ -1520,26 +1594,24 @@ function setAlarm(num, time) {
 
         let tokens = time.split(":");
         alarms[num] = {
-            name: "alarm" + num.toString(),
-            value: {
-                hour: tokens[0],
-                minute: tokens[1]
-            }
+//            name: "alarm" + num.toString(),
+            hour: tokens[0],
+            minute: tokens[1]
         };
-        //console.log(`alarm value is ${alarms[num].value.hour}:${alarms[num].value.minute}`);
+        //console.log(`alarm value is ${alarms[num].hour}:${alarms[num].minute}`);
 
-        let now = new Date();
+        now = new Date();
         let then = new Date();
         then.setHours(tokens[0], tokens[1], 0);
         let diff = then.getTime() - now.getTime();
         if (diff < 0) { // Make it for tomorrow instead
-            diff += util.Hour2ms(24);
+            diff += 24 * 60 * 60 * 1000;
             //console.log("Setting alarm for tomorrow");
         }
 
         //console.log(`setting alarm to ${diff} ms`);
         regTimeouts[num] = setTimeout(onWakeup, diff, num);
-        snoozes[num] = now.getTime() + diff;
+//        snoozes[num] = now.getTime() + diff;
     } else {
         //console.log(`clearing alarm num ${num}`);
         alarms[num] = undefined;
@@ -1549,19 +1621,22 @@ function setAlarm(num, time) {
         return;
     }
 
-    if (typeof messages[num] == 'undefined' ||
-        messages[num].value == "") {
-        setMessage(num, ""); // Make sure it's *something*
-    } else {
+//    if (typeof messages[num] == 'undefined' ||
+//        messages[num].value == "") {
+//        setMessage(num, ""); // Make sure it's *something*
+//    } else {
         writeNote(num);
-    }
+//    }
 }
 
 function writeNote(num) {
     
+//    setMessage(num, mess);
+
+    //console.log(`Saving Alarm: ${alarms[num].hour}:${alarms[num].minute}`);
     writeFileSync("note" + num, {
-        time: alarms[num],
-        message: messages[num],
+        hour: alarms[num].hour,
+        minute: alarms[num].minute,
         snooze: snoozes[num]
     }, "json");
 }
@@ -1569,12 +1644,16 @@ function writeNote(num) {
 function setMessage(num, mess) {
     //console.log(`setting message ${num} to ${mess}`);
     
-    messages[num] = {
-        name: "message" + num.toString(),
-        value: mess
-    };
+//    messages[num] = {
+//        name: "message" + num.toString(),
+//        value: mess
+//    }
 
-    writeNote(num);
+    writeFileSync("mess" + num, {
+        message: mess
+    }, "json");
+    //console.log("done");
+//    writeNote(num, mess);
 }
 
 
@@ -1593,9 +1672,9 @@ try {
     //console.log(`no podchange info - asking companion`)
     
     // See if we can get it from the companion
-    if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
+    if (msg.peerSocket.readyState === msg.peerSocket.OPEN) {
         // Send a command to the companion
-        messaging.peerSocket.send({
+        msg.peerSocket.send({
             command: "podchange"
         });
     }  
@@ -1629,47 +1708,72 @@ try {
 // Read in initial note times and messages
 for (let i = 0; i < 10; i++) {
 //    let m = new ArrayBuffer(200);
-    let now = new Date();
+    now = new Date();
 
     try {
         let m = readFileSync("note" + i, "json");
-        //console.log(`read note ${i}, m=${m}`);
+        //console.log(`read note ${i}, message="${m.message}"`);
         
+/*
         let mess = "";
-        if (typeof m.message == 'undefined' || typeof m.message.value == 'undefined') {
-            //console.log("setting message to null");
-            mess = "";
+        let me = m.message;
+        if (typeof me != 'undefined' && typeof me.value != 'undefined') {
+            mess = me.value;
+            //console.log(`me.value`);
+            setMessage(i, mess);
         } else {
-            //console.log("setting message to something");
-            mess = m.message.value;
+            let n = readFileSync("mess" + i, "json");
+            mess = n.message;
         }
-        
-        if (m && !isNaN(m.time.value.hour) && !isNaN(m.time.value.minute)) {
-            //console.log(`i=${i}: m=${m.time.value.hour}:${m.time.value.minute} , ${mess}`);
+        //console.log(`Message: ${mess}`);
+*/        
+        var ahour, aminute;
+        try{
+            let ti = m.time;
+            ti = ti.value;
+            ahour = ti.hour;
+            aminute = ti.minute;
+        }catch(e){
+            ahour = m.hour;
+            aminute = m.minute;
+        }
 
-            alarms[i] = m.time;
-            messages[i] = {value: mess};
+        console.log(`>>> Setting alarm for ${ahour}:${aminute}`);
+        console.log(`snooze is ${m.snooze}`);
+/*
+        if (!isNaN(ahour) && !isNaN(aminute)) {
+            //console.log(`i=${i}: m=${ahour}:${aminute} , ${mess}`);
+
+//            alarms[i] = m.time;
+            alarms[i] = {hour: ahour, minute: aminute};
+//            messages[i] = {value: mess};
 
             let then = new Date();
-            then.setHours(m.time.value.hour, m.time.value.minute, 0);
+            then.setHours(ahour, aminute, 0);
             let diff = then.getTime() - now.getTime();
             if (diff < 0) { // Make it for tomorrow instead
-                diff += util.Hour2ms(24);
+                diff += 24 * 60 * 60 * 1000;
             }
-            //console.log(`Setting timeout in ${diff} ms`);
+            console.log(`Setting timeout in ${diff} ms`);
             
             regTimeouts[i] = setTimeout(onWakeup, diff, i);
-            if (m.snooze > 0) {
-                if(m.snooze > now.getTime()) {
-                    snoozeTimeouts[i] = setTimeout(onWakeup, m.snooze - now.getTime(), i);
-                    snoozes[i] = m.snooze;
-                } else {
-                    currAlarm = i;
-                    runAlarmNow(10);
-                }
+            //console.log(`snooze is ${m.snooze}`);
+}
+*/
+        if (m.snooze > 0) {
+            if(m.snooze > now.getTime()) {
+                snoozeTimeouts[i] = setTimeout(onWakeup, m.snooze - now.getTime(), i);
+                console.log(`Snooze alarm set ${m.snooze-now.getTime()}`);
+                snoozes[i] = m.snooze;
+            } else {
+                currAlarm = i;
+                runAlarmNow(10);
             }
-//            currSnooze = now.getTime() + diff;
         }
+        setAlarm(i, `${ahour}:${aminute}`);
+
+//            currSnooze = now.getTime() + diff;
+//        }
     } catch (err) {}
 }
 
@@ -1709,17 +1813,22 @@ inbox.onnewfile = () => {
 
 function readSGVFile(fileName) {
 
+    BGval= []; BGdate = [];
+    let BG = readFileSync(fileName, 'cbor');
+    for(let i=0;i<BG.length;i++) {
+        BGval[i] = BG[i].s;
+        BGdate[i] = BG[i].d;
+    }
     BG = [];
-    BG = readFileSync(fileName, 'cbor');
     //console.log("reading graph file");
-    myGraph.updateRgraph(BG, screenHeight, screenWidth);
+    myGraph.updateRgraph(BGval, BGdate, screenHeight, screenWidth, lastCalibration);
 
     if (showingGraph) {
-        updateGraph(BG);
+        updateGraph(BGval, BGdate);
     }
 }
 
-function updateGraph(data) {
+function updateGraph(bgval, bgdate) {
 
     let min = 500;
     let max = 0;
@@ -1755,14 +1864,14 @@ function updateGraph(data) {
 
     //console.log(`graphmin=${graphWindow.getElementById("graphMin")}`);
 
-    for (let i = 0; i < data.length; i++) {
-        if (data[i].s < min) {
-            min = data[i].s;
-            minAt = data[i].d;
+    for (let i = 0; i < bgval.length; i++) {
+        if (bgval[i] < min) {
+            min = bgval[i];
+            minAt = bgdate[i];
         }
-        if (data[i].s > max) {
-            max = data[i].s;
-            maxAt = data[i].d;
+        if (bgval[i] > max) {
+            max = bgval[i];
+            maxAt = bgdate[i];
         }
     }
     min--;
@@ -1773,14 +1882,14 @@ function updateGraph(data) {
     // Set start time
     if (rad) {
         let a=0;let b=0;let i=0;
-        for (let j=0;j<BG.length;j++) {
-            if (BGHigh > 0 && BG[j].s > BGHigh) a++;
-            else if (BGLow > 0 && BG[j].s < BGLow) b++;
+        for (let j=0;j<BGval.length;j++) {
+            if (BGHigh > 0 && BGval[j] > BGHigh) a++;
+            else if (BGLow > 0 && BGval[j] < BGLow) b++;
             else i++
         }
-        a = (a*100)/ BG.length;
-        b = (b*100) / BG.length;
-        i = (i*100) / BG.length;
+        a = (a*100)/ BGval.length;
+        b = (b*100) / BGval.length;
+        i = (i*100) / BGval.length;
 
         timeAbove.text = `High: ${util.oneDecimal(a)}%`;
         timeIn.text = `In: ${util.oneDecimal(i)}%`;
@@ -1798,15 +1907,15 @@ function updateGraph(data) {
         arcBelow.sweepAngle = (b*360)/100;
         arcBelow.style.fill = myGraph.LC();
     } else {
-        graphStart.text = hourMin(data[data.length - 1].d);
-        graphEnd.text = hourMin(data[0].d);
+        graphStart.text = hourMin(bgdate[bgdate.length - 1]);
+        graphEnd.text = hourMin(bgdate[0]);
         graphMin.text = `${bgCorrectValue(min)}`;
         graphMax.text = `${bgCorrectValue(max)}`;
     }
     graphMinAt.text = `${hourMin(minAt)}`;
     graphMaxAt.text = `${hourMin(maxAt)}`;
-    graphStartAt.text = `Start: ${bgCorrectValue(data[data.length-1].s)}`;
-    graphEndAt.text = `End: ${bgCorrectValue(data[0].s)}`;
+    graphStartAt.text = `Start: ${bgCorrectValue(bgval[bgval.length-1])}`;
+    graphEndAt.text = `End: ${bgCorrectValue(bgval[0])}`;
     graphIOB.text = `--`;
     graphCOB.text = `--`;
 
@@ -1817,7 +1926,7 @@ function updateGraph(data) {
     myGraph.setBGColor("black");
 
     // Update the graph
-    myGraph.update(data);
+    myGraph.update(bgval, bgdate, lastCalibration);
     graphWindow.style.display = "inline";
 }
 
@@ -1830,7 +1939,7 @@ function hourMin(ms) {
 
 // Run the currAlarm ASAP
 function runAlarmNow(secs) {
-    let now = new Date();
+    now = new Date();
 
     if (currAlarm != -1) {
         // Make sure we reinvoke this alarm in the short future
@@ -1846,7 +1955,7 @@ function runAlarmNow(secs) {
 /*
  * Menu code
  */
-let menu = document.getElementById("menu");
+let menu = doc.getElementById("menu");
 let menuButton = menu.getElementById("menuButton");
 menuButton.onclick = function () {
     //console.log("MENU!");
@@ -1854,23 +1963,22 @@ menuButton.onclick = function () {
     menuWindow1.style.display = "inline";
 }
 
-let menuWindow1 = document.getElementById("menuWindow1");
-let menu1more = menuWindow1.getElementById("more");
-let menu1exit = menuWindow1.getElementById("exit");
+let menuWindow1 = doc.getElementById("menuWindow1");
+//let menu1exit = menuWindow1.getElementById("exit");
 
-var menu1 = [];
+//var menu1 = [];
 let menuItemClass = menuWindow1.getElementsByClassName("menuItem");
 for (let i = 0; i < menuItemClass.length ; i++) {
-    menu1[i] = menuWindow1.getElementById(i.toString());
-    menu1[i].onclick = function () {
-        menu1click(menu1[i].text);
+    let menu1 = menuWindow1.getElementById(i.toString());
+    menu1.onclick = function () {
+        menu1click(menu1.text);
     };
 }
 
-function menu1click(string) {
+function menu1click(id) {
 
-    //console.log(`string is ${string} lastalarm=${lastAlarm}`);
-    switch (string) {
+    console.log(`menu id is ${id} lastalarm=${lastAlarm}`);
+    switch (id) {
     case "Redo last alarm":
         if (lastAlarm >= 0) {
             currAlarm = lastAlarm;
@@ -1898,31 +2006,32 @@ function menu1click(string) {
         menuWindow1.style.display = "none";
     }
 }
-if (menu1more != null) {
-    menu1more.onclick = function () {
-        //console.log("more1");
-        menuWindow2.style.display = "inline";
-    }
+
+let menu1more = menuWindow1.getElementById("more");
+menu1more.onclick = function () {
+    //console.log("more1");
+    menuWindow2.style.display = "inline";
 }
+let menu1exit = menuWindow1.getElementById("exit");
 menu1exit.onclick = menuExit;
 
 
 /*
  * Second page of menu items
  */
-let menuWindow2 = document.getElementById("menuWindow2");
-let menu2more = menuWindow2.getElementById("more");
-let menu2exit = menuWindow2.getElementById("exit");
+let menuWindow2 = doc.getElementById("menuWindow2");
+//let menu2more = menuWindow2.getElementById("more");
+//let menu2exit = menuWindow2.getElementById("exit");
 
-var menu2 = [];
+//var menu2 = [];
 menuItemClass = menuWindow2.getElementsByClassName("menuItem");
 for (let i = 0; i < menuItemClass.length ; i++) {
-    menu2[i] = menuWindow2.getElementById(i.toString());
-    menu2[i].onclick = function () {
-        menu2click(menu2[i].text);
+    let menu2 = menuWindow2.getElementById(i.toString());
+    menu2.onclick = function () {
+        menu2click(menu2.text);
     };
 }
-menuItemClass = [];
+menuItemClass = undefined;
 
 function menu2click(string) {
     switch (string) {
@@ -1939,11 +2048,13 @@ function menu2click(string) {
     }
 }
 
-if (menu2more != null) {
+try{
+    let menu2more = menuWindow2.getElementById("more");
     menu2more.onclick = function () {
         //console.log("more2");
     }
-}
+}catch(e){}
+let menu2exit = menuWindow2.getElementById("exit");
 menu2exit.onclick = menuExit;
 
 function menuExit() {
@@ -1955,7 +2066,7 @@ function menuExit() {
     noticeDismiss.style.display = "none";
 }
 
-let noticeDismiss = document.getElementById("noticeDismiss");
+let noticeDismiss = doc.getElementById("noticeDismiss");
 
 /*
  * Menu item routines
@@ -1966,7 +2077,7 @@ function suppressionsText() {
     //  <textarea id="noteMess" text-anchor="start" x="10" y="20%" width="100%-10" text-length="200"  font-size="40" display="none"/>
     //  <use id="dismiss" href="#square-button" y="72%" width="50%" fill="fb-red"  display="none">
     //console.log("Suppressions Text");
-    let now = new Date();
+    now = new Date();
 
     noteMess.text = "";
     noteMess.style.fontSize = 30;
@@ -2050,11 +2161,17 @@ function cancelSuppressions() {
     commSnoozeEnd = 0;
 
     writeLimitsInfo();
-    
+
+    for (let i = 0 ; i < 10; i++) {
+        clearAlarm(i);
+        writeNote(i);
+    }
+
     menuExit();
+    testLimits();
 }
 
-let list = document.getElementById("menu-list");
+let list = doc.getElementById("menu-list");
 
 /*
  * Initialization code
@@ -2063,8 +2180,10 @@ let list = document.getElementById("menu-list");
 // Read in any snooze time which was previously running and restart it
 
 
+let now = new Date();
+let lastDispCal = now.getTime();;
+
 try {
-    let now = new Date();
     let m = readFileSync("snooze", "json");
     
     let timeout = m.timeout;
@@ -2095,6 +2214,7 @@ try {
         }
     }
 } catch (err) {}
+let defAlmSz=0;                  // init.
 
 let bgSnoozeTimes = [20, 40, 60, 90, 120, 180, 240, 480];
 try {
@@ -2106,30 +2226,27 @@ try {
         }
     }
 } catch (err) {};
+let defBgSz=0;                  // init.
 
-/*
 try {
-    let now = new Date();
-    let warnStart = readFileSync("warn-start", "json");
-    warnSuppressStart.hours = parseInt(warnStart.hours);
-    warnSuppressStart.minutes = parseInt(warnStart.minutes);
-    warnSuppressStart.def = true;
-    //console.log(`Warn-start: ${warnSuppressStart.hours}:${warnSuppressStart.minutes}`);
+    warnSuppressStart = readFileSync("warn-start", "json");
+//    warnSuppressStart.hours = parseInt(warnStart.hours);
+//    warnSuppressStart.minutes = parseInt(warnStart.minutes);
+//    warnSuppressStart.def = true;
+//    console.log(`Warn-start: ${warnSuppressStart.hours}:${warnSuppressStart.minutes}`);
 } catch (err) {
     warnSuppressStart = {def: false};
 }
 
 try {
-    let now = new Date();
-    let warnEnd = readFileSync("warn-end", "json");
-    warnSuppressEnd.hours = parseInt(warnEnd.hours);
-    warnSuppressEnd.minutes = parseInt(warnEnd.minutes);
-    warnSuppressEnd.def = true;
-    //console.log(`Warn-end: ${warnSuppressEnd.hours}:${warnSuppressEnd.minutes}`);
+    warnSuppressEnd = readFileSync("warn-end", "json");
+//    warnSuppressEnd.hours = parseInt(warnEnd.hours);
+//    warnSuppressEnd.minutes = parseInt(warnEnd.minutes);
+//    warnSuppressEnd.def = true;
+//    console.log(`Warn-end: ${warnSuppressEnd.hours}:${warnSuppressEnd.minutes}`);
 } catch (err) {
     warnSuppressEnd = {def: false};
 }
-*/
 
 try {
     let t = readFileSync("commsnooze", "json");
@@ -2150,10 +2267,11 @@ try {
 
 if (nsConfigured) {
     // Make sure we at least *try* getting data, even if all else fails
-    setTimeout(wakeupFetch, util.Min2ms(1));
+    setTimeout(wakeupFetch, 1 * 60 * 1000);
 }
 
-//console.log(`max. message size is ${messaging.peerSocket.MAX_MESSAGE_SIZE}`);
+//console.log(`max. message size is ${msg.peerSocket.MAX_MESSAGE_SIZE}`);
 //console.log("JS memory: " + memory.js.used + "/" + memory.js.total);
 //console.log(`Memory pressure is at ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
 
+updateCorners();

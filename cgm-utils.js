@@ -23,15 +23,3 @@ export function mgdl( bg ) {
     let mgdl = Math.floor(BG);
     return mgdl;
 }
-
-export function Min2ms(x) {
-  return (x * 60 * 1000);
-}
-
-export function Hour2ms(x) {
-  return (60 * Min2ms(x));
-}
-
-export function Day2ms(x) {
-  return (24 * Hour2ms(x));
-}

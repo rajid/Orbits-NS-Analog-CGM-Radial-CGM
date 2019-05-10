@@ -1,25 +1,32 @@
 {
+  "name": "orbits-ns",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fitbit/sdk": "~3.1.0",
+    "@fitbit/sdk-cli": "^1.6.0"
+  },
   "fitbit": {
     "appUUID": "44de5c81-b77c-4f90-baa8-38f3e3d28695",
     "appType": "clockface",
     "appDisplayName": "Orbits NS",
     "iconFile": "resources/icon.png",
-    "wipeColor": "",
+    "wipeColor": "#ffffff",
     "requestedPermissions": [
       "access_internet",
       "run_background"
     ],
     "buildTargets": [
       "higgs",
-      "meson"
+      "meson",
+      "gemini"
     ],
-    "i18n": {
-      "en": {
-        "name": "Orbits NS"
-      }
-    }
+    "i18n": {},
+    "defaultLanguage": "en-US"
   },
   "scripts": {
-    "build": "../uglify-build.sh ; fitbit-build"
+    "build": "../uglify-build.sh ; fitbit-build",
+    "debug": "fitbit"
   }
 }

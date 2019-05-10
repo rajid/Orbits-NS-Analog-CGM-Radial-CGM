@@ -26,22 +26,22 @@ export default class Graph {
         this._tLow = 72;
         this._tUL = 60;
 
-        this._urgentHighColor = "violet";
-        this._highColor = "blue";
-        this._inRangeColor = "lightgreen";
-        this._lowColor = "pink";
-        this._urgentLowColor = "red";
+        this._UHC = "violet";
+        this._HC = "blue";
+        this._IRC = "lightgreen";
+        this._LC = "pink";
+        this._ULC = "red";
         
-        this._tHighLine = this._id.getElementById("tHigh");
-        this._tLowLine = this._id.getElementById("tLow");
-        this._tUHLine = this._id.getElementById("tUrgentHigh");
-        this._tULLine = this._id.getElementById("tUrgentLow");
+        this._tHighL = this._id.getElementById("tHigh");
+        this._tLowL = this._id.getElementById("tLow");
+        this._tUHL = this._id.getElementById("tUrgentHigh");
+        this._tULL = this._id.getElementById("tUrgentLow");
         
         this._defaultYmin = 40;
         this._defaultYmax = 400;
         
-        this._bgValue = 0;
-        this._bgUnits = "bg/dL";
+//        this._bgValue = 0;
+//        this._bgUnits = "bg/dL";
     }
     
     setPosition(x,y){   
@@ -80,6 +80,7 @@ export default class Graph {
         return this._ymax;
     }
     
+/*
     setBGValue(v) {
         this._bgValue = v;
     }
@@ -105,6 +106,7 @@ export default class Graph {
         if (v > 0 && this.bgValue() < v) return true;
         else return false;
     }
+*/
     setBGColor(c){
         this._bgcolor = c;
         this._bg.style.fill = c;
@@ -113,119 +115,128 @@ export default class Graph {
     setUH(l) {
         this._tUH = l;
     }
-    setUHColor(c){
-        this._urgentHighColor = c;
+    setUHC(c){
+        this._UHC = c;
     }
 
     setH(l) {
         this._tHigh = l;
     }
     H(){return this._tHigh}
-    HC() {return this._highColor}
-    setHColor(c){
-        this._highColor = c;
+    HC() {return this._HC}
+    setHC(c){
+        this._HC = c;
     }
     
-    setIRColor(c){
-        this._inRangeColor = c;
+    setIRC(c){
+        this._IRC = c;
     }
 
     setL(l) {
         this._tLow = l;
     }
     L(){return this._tLow}
-    LC() {return this._lowColor}
-    setLColor(c){
-        this._lowColor = c;
+    LC() {return this._LC}
+    setLC(c){
+        this._LC = c;
     }
     setUL(l) {
         this._tUL = l;
     }
-    setULColor(c){
-        this._urgentLowColor = c;
+    setULC(c){
+        this._ULC = c;
     }
 
     maxBGs() {
         return 24;
     }
 
-    update(v){
+    update(bgval, bgdate, caldate){
         
         //this._bg.style.fill = this._bgcolor;
         
         if (this._tHigh <= this._ymax && this._tHigh >= this._ymin) {
-            this._tHighLine.y1 = this._id.height - ((this._tHigh-this._ymin) / this._yscale);
-            this._tHighLine.y2 = this._tHighLine.y1;
-            this._tHighLine.x1 = 0;
-            this._tHighLine.x2 = this._id.width;
-            this._tHighLine.style.display = "inline";
-            this._tHighLine.style.fill = this._highColor;
+            this._tHighL.y1 = this._id.height - ((this._tHigh-this._ymin) / this._yscale);
+            this._tHighL.y2 = this._tHighL.y1;
+            this._tHighL.x1 = 0;
+            this._tHighL.x2 = this._id.width;
+            this._tHighL.style.display = "inline";
+            this._tHighL.style.fill = this._HC;
             //console.log(`high line at ${this._tHigh}`);
         }
         if (this._tLow >= this._ymin && this._tLow <= this._ymax) {
-            this._tLowLine.y1 = this._id.height - ((this._tLow-this._ymin) / this._yscale);
-            this._tLowLine.y2 = this._tLowLine.y1;
-            this._tLowLine.x1 = 0;
-            this._tLowLine.x2 = this._id.width;
-            this._tLowLine.style.display = "inline";
-            this._tLowLine.style.fill = this._lowColor;
+            this._tLowL.y1 = this._id.height - ((this._tLow-this._ymin) / this._yscale);
+            this._tLowL.y2 = this._tLowL.y1;
+            this._tLowL.x1 = 0;
+            this._tLowL.x2 = this._id.width;
+            this._tLowL.style.display = "inline";
+            this._tLowL.style.fill = this._LC;
             //console.log(`low line at ${this._tLow}`);
         }
         if (this._tUH <= this._ymax && this._tUH >= this._ymin) {
-            this._tUHLine.y1 = this._id.height - ((this._tUH-this._ymin) / this._yscale);
-            this._tUHLine.y2 = this._tUHLine.y1;
-            this._tUHLine.x1 = 0;
-            this._tUHLine.x2 = this._id.width;
-            this._tUHLine.style.display = "inline";
-            this._tUHLine.style.fill = this._urgentHighColor;
+            this._tUHL.y1 = this._id.height - ((this._tUH-this._ymin) / this._yscale);
+            this._tUHL.y2 = this._tUHL.y1;
+            this._tUHL.x1 = 0;
+            this._tUHL.x2 = this._id.width;
+            this._tUHL.style.display = "inline";
+            this._tUHL.style.fill = this._UHC;
             //console.log(`Urgent high line at ${this._tUH}`);
         }
         if (this._tUL >= this._ymin && this._tLow <= this._ymax) {
-            this._tULLine.y1 = this._id.height - ((this._tUL-this._ymin) / this._yscale);
-            this._tULLine.y2 = this._tULLine.y1;
-            this._tULLine.x1 = 0;
-            this._tULLine.x2 = this._id.width;
-            this._tULLine.style.display = "inline";
-            this._tULLine.style.fill = this._urgentLowColor;
+            this._tULL.y1 = this._id.height - ((this._tUL-this._ymin) / this._yscale);
+            this._tULL.y2 = this._tULL.y1;
+            this._tULL.x1 = 0;
+            this._tULL.x2 = this._id.width;
+            this._tULL.style.display = "inline";
+            this._tULL.style.fill = this._ULC;
             //console.log(`Urgent low line at ${this._tUL}`);
         }
 
-        let firstDate = v[0].d;
-        let lastDate = v[v.length-1].d;
+        let firstDate = bgdate[0];
+        let lastDate = bgdate[bgdate.length-1];
         let xRange = firstDate - lastDate;
 
-        for (var index = 0; index < v.length; index++) {
+        let usedCal = false;
+        if (caldate == 0) usedCal = true;
+
+//        for (var i = 0; i < bgval.length; i++) {
+        for (var i = Math.min(bgval.length-1, this._vals.length-1) , j = 0 ;
+             i >= 0 ; i-- , j++) {
             
-            let i = v.length-1-index;
-            this._vals[index].cy = this._id.height - ((v[i].s-this._ymin) / this._yscale);
-            let diff = v[i].d-lastDate;
+//            let i = bgval.length-1-index;
+            this._vals[j].cy = this._id.height - ((bgval[i]-this._ymin) / this._yscale);
+            let diff = bgdate[i]-lastDate;
             diff = diff / xRange;
-            this._vals[index].cx = (diff * (this._id.width-2)) + 1;
-            if (v[i].c) {
-                this._vals[index].r = 4;
+            this._vals[j].cx = (diff * (this._id.width-2)) + 1;
+//            if (!usedCal && caldate >= bgdate[i]) {
+            if (!usedCal && caldate <= bgdate[i]) {
+                this._vals[j].r = 4;
+                usedCal = true; // found the latest calibration time
             } else {
-                this._vals[index].r = 2;
+                this._vals[j].r = 2;
             }
-            this._vals[index].style.fill = this.setColor(v[i].s);
-            this._vals[index].style.display = "inline";
+            this._vals[j].style.fill = this.setColor(bgval[i]);
+            this._vals[j].style.display = "inline";
         }
-        
-        
+
+        while (j < this._vals.length) {
+            this._vals[j++].style.display = "none";
+        }
     }
 
     setColor(v) {
         var c;
         
         if (this._tUH > 0 && v > this._tUH) {
-            c =  this._urgentHighColor;
+            c =  this._UHC;
         } else if (this._tHigh > 0 && v > this._tHigh) {
-            c =  this._highColor;
+            c =  this._HC;
         } else if (this._tUL > 0 && v < this._tUL) {
-            c =  this._urgentLowColor;
+            c =  this._ULC;
         } else if (this._tLow > 0 && v < this._tLow) {
-            c =  this._lowColor;
+            c =  this._LC;
         } else {
-            c = this._inRangeColor;
+            c = this._IRC;
         }
         return(c);
     }
@@ -235,10 +246,10 @@ export default class Graph {
         for (var index = 0; index < this._vals.length; index++) {
             this._vals[index].style.display = "none";
         }
-        this._tHighLine.style.display = "none";
-        this._tLowLine.style.display = "none";
-        this._tUHLine.style.display = "none";
-        this._tULLine.style.display = "none";
+        this._tHighL.style.display = "none";
+        this._tLowL.style.display = "none";
+        this._tUHL.style.display = "none";
+        this._tULL.style.display = "none";
     }
 
     updateRgraph() {}

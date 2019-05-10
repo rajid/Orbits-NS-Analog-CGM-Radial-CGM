@@ -69,19 +69,18 @@ var cometURL;
 
 
 
-function  sendData(bg, date, period, delta, next, calibration) {
+function  sendData(bg, date, period, delta, next) {
     console.log("Replying from companion");
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
         let now = new Date();
-        console.log(`bg=${bg} age=${(now.getTime()-date)/(60*1000)} mins`);
+        console.log(`bg=${bg}`);
         messaging.peerSocket.send({
             key: "bg",
             bg: bg,
             date: date,
             period: period,
             delta: delta,
-            update: next,
-            cal: calibration
+            update: next
         });
 
     } else {
@@ -92,6 +91,8 @@ function  sendData(bg, date, period, delta, next, calibration) {
 
 let doingFetch = false; // Try to avoid overlapping fetches
 let fetchErrors = 0; // know when to try Local mode
+let bgs = [];
+let dates = [];
 function queryBGD() {
     if (baseURL == "") return;
     let url = getSgvURL()
@@ -113,31 +114,51 @@ function queryBGD() {
                 .then(function(data) {
                     fetchErrors = 0; // worked!!
                     console.log(`Got data: ${data}`);
-                    // Calculate how long between updates
-                    let a = data[0].date;
-                    let b = data[1].date;
-                    lastperiod = a - b;
 
-                    let calibration=false;
-                    // Save away the last info
-                    if (data[0].type == "cal") {
-//                        calibration = true;
-                        lastbg = data[1].sgv;
-                        lastdate = data[1].date;
-                    } else {
-                        lastbg = data[0].sgv;
-                        lastdate = data[0].date;
-                        if (data[1].type == "cal") {
-                            calibration = true;
+                    let date1 = 0 , date2 = 0;
+                    let sgv1 = 0 , sgv2 = 0;
+                    bgs = []; dates = [];
+                    for (let i = 0 ; i < data.length ; i++) {
+                        if (data[i].type == "cal") {
+                            if (i > 0) 
+                                sendSetting("cal", data[i-1].date, "");
+                        } else {
+                            if (date1 == 0) {
+                                date1 = data[i].date;
+                                sgv1 = data[i].sgv;
+                                console.log(`saving date1 with index ${i}`);
+                            } else if (date2 == 0) {
+                                date2 = data[i].date;
+                                sgv2 = data[i].sgv;
+                                console.log(`saving date2 with index ${i}`);
+                            }
                         }
+//                        bgs[i] = data[i].sgv;
+//                        dates[i] = data[i].date;
                     }
-                    if (calibration) {
-                        lastdelta = 0;
+
+                    // Save away the last info
+                    lastperiod = date1 - date2;
+                    if (sgv1 != 0) {
+                        lastbg = sgv1;
+                        lastdate = date1;
+                        lastdelta = sgv1 - sgv2;
                     } else {
-                        lastdelta = data[0].sgv - data[1].sgv;
+                        lastbg = sgv2;
+                        lastdate = date2;
+                        lastdelta = 0; // for now
                     }
+                    if (isNaN(lastdelta))
+                        lastdelta = 0;
+                    console.log(`period=${lastperiod}, bg=${lastbg}, lastdate=${lastdate}, delta=${lastdelta}`);
+
                     bgNext = setUpdateInterval();
-                    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext, calibration);
+
+//                    if (lastbg == 0) {
+//                        fetch(`https://peacock.place/cgi-bin/log.cgi?date1=${date1}&date2=${date2}&sgv1=${sgv1}&sgv2=${sgv2}`);
+//                    }
+
+                    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext);
                     doingFetch = false;              
                 });
         })
@@ -152,7 +173,7 @@ function queryBGD() {
                 }
             }
             // Try again in 1 minute
-            sendData(0,0,0,0, now.getTime() + (1 * 60 * 1000), false);
+            sendData(0,0,0,0, now.getTime() + (1 * 60 * 1000));
             doingFetch = false;              
         });
 }
@@ -161,9 +182,27 @@ function queryBGD() {
 function returnGraphData(data) {  
     let graphData = [];
 
+    let cal = 0;
     for (let i = 0 ; i*2 < data.length ; i++) {
-        graphData[i] = {s: data[i*2].sgv, d: data[i*2].date};
+        let index = i*2;
+        if (cal == 0) {
+            if (data[index].type == "cal") {
+                index = i*2 - 1;    // value is last entry
+                cal = data[index].date;
+                sendSetting("cal", cal, "");
+                console.log(`>>>>>> got a calibration value next - val ${data[index].sgv}`);
+            } else if (index+1 < data.length && data[index+1].type == "cal") {
+                cal = data[index].date;
+                sendSetting("cal", cal, "");
+                console.log(`>>>>>> got a calibration value here - val ${data[index].sgv}`);
+            }
+        }
+        
+        graphData[i] = {s: data[index].sgv
+                        ,d: data[index].date
+                       };
     }
+
     const myFileInfo = encode(graphData);
     outbox.enqueue('graph.json', myFileInfo);
 
@@ -175,8 +214,16 @@ function sendGraphData(data) {
     
     let graphData = [];
     
-    for (let i = 0 ; i < data.length ; i++) {
-        graphData[i] = {s: data[i].sgv, d: data[i].date};
+    for (let ifrom = 0, ito = 0 ; ifrom < data.length ; ifrom++) {
+        //console.log(`type of ${ifrom} with value ${data[ifrom].sgv} is ${data[ifrom].type}`);
+        let cal = 0;
+        if (ifrom > 0 && data[ifrom].type == "cal") {
+            sendSetting("cal", data[ifrom-1].date , "");
+        } else {
+            graphData[ito++] = {s: data[ifrom].sgv,
+                              d: data[ifrom].date
+                             };
+        }
     }
 
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
@@ -436,26 +483,25 @@ function addURL(now) {
 }
 
 
-settingsStorage.onchange = function(evt) {
-    var d;
+settingsStorage.onchange = updateSetting;
+
+function updateSetting(evt, updateConfigStr) {
+    var now, d;
     var minUpdateStr;
 
-    console.log(`Got settings storage change ${evt.key}`);
+    console.log(`Got settings storage change ${evt.key} to ${evt.newValue}`);
+    now = new Date();
+    
     switch (evt.key) {
     case "change": // Update calendar of a pod change
-        console.log("Change pod now");
-        //            let toggleValue = settingsStorage.getItem("change");
-        //            if (toggleValue === 'true') {
         console.log("Updating comet");
-        d = new Date();
-        settingsStorage.setItem("podchange", d.getTime());
+        settingsStorage.setItem("podchange", now.getTime());
         if (!isNaN(timerVal) && timerVal != 0) {
             sendSetting("timer", timerVal, "");
         }
         // Invoke our special URL for this update
-        addURL(d);
+        addURL(now);
         getAndSendPodchange();
-        //            }
         break;
 
     case "changeDate":
@@ -619,6 +665,16 @@ settingsStorage.onchange = function(evt) {
         }
         break;
         
+    case "defBgSz":
+        defBgSz = parseInt(JSON.parse(evt.newValue).name);
+        sendSetting("defBgSz", defBgSz, "");
+        break;
+        
+    case "defAlmSz":
+        defAlmSz = parseInt(JSON.parse(evt.newValue).name);
+        sendSetting("defAlmSz", defAlmSz, "");
+        break;
+        
     case "url":
         baseURL = JSON.parse(evt.newValue).name;
         if (baseURL != "") {
@@ -772,7 +828,31 @@ settingsStorage.onchange = function(evt) {
         sendSetting("second", 0, secondColor);
         break;
 
+    case "config":
+        let conf  = JSON.parse(evt.newValue).name;
+        console.log(`Got new config: ${conf}`);
+        conf = JSON.parse(conf);
+        for (let i in conf) {
+            let val=`${conf[i]}`;
+            console.log(`${i} = ${val}`);
+            if (val == "true" || val == "false") {
+                console.log(`Setting toggle value`);
+                settingsStorage.setItem(i, val);
+                updateSetting({"key":i, newValue: val}, false);
+            } else {
+                settingsStorage.setItem(i, JSON.stringify({"name": val}));
+                let nv = {name: val}
+                updateSetting({"key":i, newValue: JSON.stringify(nv)}, false);
+            }
+        }
+        break;
     }
+
+    if (updateConfigStr == undefined || updateConfigStr == true) {
+        console.log("******* Updating configstr *****");
+        initConfigString();
+    }
+
 }
 
 function sendSetting(item, num, value) {
@@ -815,8 +895,25 @@ function getBaseURL() {
 
 let localMode = 0;
 function getSgvURL() {
+    let now = new Date();
+    let timePeriod;
+    if (isNaN(lastdate)) {
+        timePeriod = 5; // default
+    } else {
+        timePeriod = (now.getTime() - lastdate) / (60 * 1000);
+    }
+    console.log(`minUpdate is ${minUpdate}`);
+    let count = Math.floor(minUpdate / 5) + 3;
+    console.log(`Getting ${count} entries`);
 
-    let URL = getBaseURL() + "/api/v1/entries.json?count=2";
+    let URL;
+    console.log(`useLocal=${useLocal} localApp=${localApp}`);
+    if (useLocal === 'true' && localApp === 'true') {
+        URL = `http://127.0.0.1:17580/sgv.json?count=${count}`;
+        return (URL);
+    } else {
+        URL = getBaseURL() + `/api/v1/entries.json?count=${count}`;
+    }
     if (URLtoken != "") {
         URL += "&token=" + URLtoken;
     }
@@ -827,7 +924,13 @@ function getGraphURL() {
     let count = 24;
     if (appName() == "radialcgm") count = (66*2);
 
-    let URL = getBaseURL() + `/api/v1/entries/sgv.json?count=${count}`;
+    let URL;
+    if (useLocal === 'true' && localApp === 'true') {
+        URL = `http://127.0.0.1:17580/sgv.json?count=${count}`;
+        return (URL);
+    } else {
+        URL = getBaseURL() + `/api/v1/entries.json?count=${count}`;
+    }
     if (URLtoken != "") {
         URL += "&token=" + URLtoken;
     }
@@ -864,7 +967,7 @@ function setUpdateInterval() {
         //    bgNext = lastdate - now.getTime() + period;
         console.log(`Update period is ${period/(60*1000)} mins`);
         for (bgNext = lastdate + period ;
-             bgNext < now.getTime() + (util.Min2ms(minUpdate));
+             bgNext < now.getTime() + (minUpdate * 60 * 1000);
              bgNext += period) {
             let y = (bgNext - now.getTime()) / (60 * 1000);
         }
@@ -898,6 +1001,8 @@ function sendSnoozeTimes() {
         sendSetting("alarmsnooze", i, alarmSnooze[i].toString());
         sendSetting("bgsnooze", i, BGSnooze[i].toString());
     }
+    sendSetting("defBgSz", defBgSz, "");
+    sendSetting("defAlmSz", defAlmSz, "");
 }
 
 function sendLowHigh() {
@@ -972,10 +1077,14 @@ function sendConfiguration2() {
         sendSetting("warn-start", 0, warnStart);
     if (typeof(warnEnd) != "undefined")
         sendSetting("warn-end", 0, warnEnd);
-    sendSetting("gradient", 0, gradientColor);
-    sendSetting("hour", 0, hourColor);
-    sendSetting("minute", 0, minuteColor);
-    sendSetting("second", 0, secondColor);
+    if (appName() != "orbitsns" && appName() != "orbitsnstesting") {
+        sendSetting("gradient", 0, gradientColor);
+        sendSetting("hour", 0, hourColor);
+        sendSetting("minute", 0, minuteColor);
+        sendSetting("second", 0, secondColor);
+    }
+    sendSetting("defBgSz", defBgSz, "");
+    sendSetting("defAlmSz", defAlmSz, "");
 }
 
 messaging.peerSocket.onopen = evt => {
@@ -1010,12 +1119,12 @@ catch (err) {
 try {
     let podchange = settingsStorage.getItem("podchange");
     console.log(`podchange time as read is ${podchange}`);
-    let i = parseInt(podChange);
+    let i = parseInt(podchange);
     if (i > 0) {
         let d = new Date(parseInt(podchange));
         settingsStorage.setItem("changeDate", JSON.stringify({"name": d.toLocaleString()}));
     } else {
-        console.log("podchange is not postive");
+        console.log("podchange is not positive");
         podChange = 0;
         settingsStorage.setItem("changeDate", JSON.stringify({"name": ""}));
     }
@@ -1187,12 +1296,20 @@ for (let i = 0 ; i < 8; i++) {
         if (parseInt(as.name) > 0) {
             alarmSnooze[i] = parseInt(as.name);
             //console.log(`alarmsnooze[${i}]=${alarmSnooze[i]}`);
-        } else {
-            settingsStorage.setItem("alarmsnooze"+i.toString(), JSON.stringify({"name": alarmSnooze[i].toString()}));
-            //console.log(`>>>>>>>> alarmsnooze error ${i}`);
         }
     } catch(err) {}
+    settingsStorage.setItem("alarmsnooze"+i.toString(), JSON.stringify({"name": alarmSnooze[i].toString()}));
 }
+
+console.log("at defalmsz");
+let defAlmSz = 0;
+try {
+    let bgs = JSON.parse(settingsStorage.getItem("defAlmSz"));
+    if (parseInt(bgs.name) > 0) {
+        defAlmSz = parseInt(bgs.name);
+    }
+} catch (err) {}
+settingsStorage.setItem("defAlmSz", JSON.stringify({"name": defAlmSz}));
 
 console.log("at bgsnooze times");
 let BGSnooze = [20,40,60,90,120,180,240,480];
@@ -1201,11 +1318,20 @@ for (let i = 0 ; i < 8; i++) {
         let bgs = JSON.parse(settingsStorage.getItem("bgsnooze"+i.toString()));
         if (parseInt(bgs.name) > 0) {
             BGSnooze[i] = parseInt(bgs.name);
-        } else {
-            settingsStorage.setItem("bgsnooze"+i.toString(), JSON.stringify({"name": BGSnooze[i].toString()}));
         }
     } catch (err) {}
+    settingsStorage.setItem("bgsnooze"+i.toString(), JSON.stringify({"name": BGSnooze[i].toString()}));
 }
+
+console.log("at defbgsz");
+let defBgSz = 0;
+try {
+    let bgs = JSON.parse(settingsStorage.getItem("defBgSz"));
+    if (parseInt(bgs.name) > 0) {
+        defBgSz = parseInt(bgs.name);
+    }
+} catch (err) {}
+settingsStorage.setItem("defBgSz", JSON.stringify({"name": defBgSz}));
 
 console.log("at units");
 let toggleValue = settingsStorage.getItem("units");
@@ -1284,19 +1410,60 @@ function logusage(usage) {
 const DAYS = 24 * 60 * 60 * 1000;
 
 try{settingsStorage.removeItem("log")}catch(err){} // first attempt - remove it now
-let usage = 1;                                     // init.
-let now = new Date();
+
+let usage=1;
 try {
     let n = JSON.parse(settingsStorage.getItem("usage"));
-    usage = parseInt(n.runs) + 1;
+    usage = parseInt(n.runs);
 
-    if (now.getTime() - n.date > (30 * DAYS)) logusage(usage);
+    if ((n.runs < 50 && (n.runs % 10) == 0) ||
+         (n.runs % 50) == 0) logusage(usage);
+    usage++;
 } catch (err) {
     logusage(usage);                 // initial use
 }
-settingsStorage.setItem("usage", JSON.stringify({"date": now.getTime(), "runs": usage}));
+console.log(`>>> runs = ${usage}`);
+settingsStorage.setItem("usage", JSON.stringify({"runs": usage}));
 
 //me.onWakeInterval = () => onWakeup();
 //me.wakeInterval = 10 * 60 * 1000;
 
 //setInterval(onWakeup, 5 * 60 * 1000); // Update every 5 minutes
+
+function initConfigString() {
+    console.log("initconfigstring");
+
+    let conf = "{";
+    for (let i = 0 ; i < settingsStorage.length ; i++) {
+        let key = settingsStorage.key(i);
+//        console.log(`key=${key}`);
+        switch (key) {
+        case "config":
+        case "usage":
+        case "change":
+        case "podchange":
+        case "log2":
+            break;
+        default:
+            var value, name;
+            try {
+                let value = settingsStorage.getItem(key);
+//                console.log(`value=${value}`);
+                let name = JSON.parse(value).name;
+                if (name != undefined) {
+                    conf += `"${key}": "${JSON.parse(value).name}",\r\n`;
+                } else {
+//                    console.log(`Looks like a toggle? value=${value}`);
+                    conf += `"${key}": "${value}", \r\n`;
+                }
+            } catch (err){console.log(`err=${err}`);}
+        }
+    }
+    conf = conf.replace(/\,\r\n$/, "");
+    conf += "}";
+    settingsStorage.setItem("config", JSON.stringify({"name": conf}));
+//    console.log(`${conf}`);
+}
+
+initConfigString();
+

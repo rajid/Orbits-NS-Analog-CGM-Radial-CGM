@@ -1,0 +1,129 @@
+
+<symbol id="clock" >
+ <svg>
+
+<svg>
+  <gradientRect id="grad" x="0" y="0" width="300" height="300"
+    gradient-type="radial"
+    gradient-x1="50%" gradient-y1="50%"
+    gradient-x2="50%+150" gradient-y2="50%+150"
+    gradient-color1="blue"
+    gradient-color2="black" />
+</svg>  
+
+      <circle cx="50%-1" cy="1" r="1" fill="white"/>
+      <circle cx="50%-1" cy="100%-1" r="1" fill="white"/>
+      <circle cx="1" cy="50%-1" r="1" fill="white"/>
+      <circle cx="100%-1" cy="50%-1" r="1" fill="white"/>
+      <circle cx="50%-75" cy="50%-129" r="1" fill="white"/> <!-- 11 -->
+      <circle cx="50%-129" cy="50%-75" r="1" fill="white"/> <!-- 10 -->
+      <circle cx="50%-129" cy="50%+75" r="1" fill="white"/> <!-- 8 -->
+      <circle cx="50%-75" cy="50%+129" r="1" fill="white"/>  <!-- 7 -->
+      <circle cx="50%+75" cy="50%-129" r="1" fill="white"/> <!-- 1 -->
+      <circle cx="50%+129" cy="50%-75" r="1" fill="white"/> <!-- 2 -->
+      <circle cx="50%+129" cy="50%+75" r="1" fill="white"/> <!-- 4 -->
+      <circle cx="50%+75" cy="50%+129" r="1" fill="white"/>  <!-- 5 -->
+
+  
+   <g id="mins" pointer-events="visible" transform="translate(50%,50%)">
+    <rect id="minHand" x="$-4" y="-110" width="8" height="110" fill="#e0e0e0" />
+  </g>
+  <g id="hours" pointer-events="visible" transform="translate(50%,50%)">
+    <rect id="hourHand" x="$-6" y="-75" width="12" height="75" fill="#ffffff" />
+  </g>
+  <g id="secs" pointer-events="visible" transform="translate(50%,50%)">
+    <rect id="secHand" x="$-2" y="-120" width="4" height="120" fill="#ff0000" />
+  </g>
+  <circle cx="50%" cy="50%" r="3" fill="#444444" />
+
+  <g id="cometorbit" transform="translate(50%,50%)" opacity="1">
+      <rect x="0" y="-140" width="0" height="140" >
+        <g id="comet" transform="translate($,-140)" display="none">
+          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" />
+        </g>
+      </rect>
+  </g>
+ </svg>
+
+ <svg>
+   <arc id="lowCircle" arc-width="1" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="red" />
+   <arc id="midCircle" arc-width="1" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="green" />
+   <arc id="highCircle" arc-width="1" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="blue" />
+ 
+<!--
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="red"/>
+-->
+</svg>
+</symbol>
+

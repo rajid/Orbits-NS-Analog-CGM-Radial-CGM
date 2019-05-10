@@ -1,6 +1,6 @@
 *~
 analog-cgm-testing
-radial-cgn-testing
+radial-cgm-testing
 orbits-ns-testing
 *#
 build
@@ -8,3 +8,4 @@ node_modules
 *diff*
 *.old
 *.orig
+*-old

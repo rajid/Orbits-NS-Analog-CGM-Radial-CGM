@@ -20,9 +20,7 @@
   </g>
   <image id="circle" href="calibrate.png" x="$-25" y="$-25" height="25" width="25" display="none" fill="white"/>
   <text id="sgv" pointer-events="visible" x="0" y="100%-2" text-anchor="start" font-size="40" fill="white"
-        opacity="1" display="none">
-    100
-  </text>
+        opacity="1" display="none" text-length="13" />
   <rect id="sgvbutton" pointer-events="visible" x="0" y="200" width="50" height="50" opacity="0" />
 
   <circle id="state" cx="100%-15" cy="15" r="10" fill="white" display="none"/>

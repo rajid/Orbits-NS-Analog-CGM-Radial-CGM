@@ -25,10 +25,10 @@
       <circle cx="50%+62" cy="50%+108" r="1" fill="white"/>  <!-- 5 -->
 
    <g id="mins" pointer-events="visible" transform="translate(50%,50%)">
-    <rect id="minHand" x="$-4" y="-110" width="8" height="110" fill="#e0e0e0" />
+    <rect id="minHand" x="$-4" y="-110" width="8" height="110" fill="#e0e0e0" opacity="0.6" />
   </g>
   <g id="hours" pointer-events="visible" transform="translate(50%,50%)">
-    <rect id="hourHand" x="$-6" y="-75" width="12" height="75" fill="#ffffff" />
+    <rect id="hourHand" x="$-6" y="-75" width="12" height="75" fill="#ffffff" opacity="0.6" />
   </g>
   <g id="secs" pointer-events="visible" transform="translate(50%,50%)">
     <rect id="secHand" x="$-2" y="-120" width="4" height="120" fill="#ff0000" />
@@ -39,7 +39,8 @@
       <rect x="0" y="-140" width="0" height="140" >
 
         <g id="comet" transform="translate($,-140)" display="none">
-          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" />
+              <circle cx="$" cy="$" r="8" fill="red" /> 
+<!--          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" /> -->
         </g>
       </rect>
   </g>

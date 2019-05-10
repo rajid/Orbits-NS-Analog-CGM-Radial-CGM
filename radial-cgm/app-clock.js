@@ -109,9 +109,9 @@ export class clockFace {
         secG.groupTransform.rotate.angle = secondsToAngle(secs);
         
         hourHand.style.fill = this._hourColor;
-        hourHand.style.opacity = 0.6;
+//        hourHand.style.opacity = 0.6;
         minHand.style.fill = this._minColor;
-        minHand.style.opacity = 0.6;
+//        minHand.style.opacity = 0.6;
         secHand.style.fill = this._secColor;
 
         /*
@@ -122,6 +122,11 @@ export class clockFace {
             let cometMinute = cometTime.getMinutes();
             cometorbit.groupTransform.rotate.angle = hoursToAngle(cometHour, cometMinute);
             comet.style.display = "inline";
+            let op = 0.4 + (((today.getTime() - cometTime.getTime()) * 0.6) /
+                            (12 * 60 * 60 * 1000));
+            if (op > 1) op = 1;
+            else if (op < 0) op = 0;
+            comet.style.fillOpacity = op;
         } else {
             comet.style.display = "none";
         }

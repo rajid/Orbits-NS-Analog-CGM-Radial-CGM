@@ -21,54 +21,54 @@ export default class Graph {
         this._lowCircle = this._id.getElementById("lowCircle");
         this._midCircle = this._id.getElementById("midCircle");
         this._highCircle = this._id.getElementById("highCircle");
-        this._urgentHighColor = "violet";
-        this._highColor = "blue";
-        this._inRangeColor = "lightgreen";
-        this._lowColor = "pink";
-        this._urgentLowColor = "red";
-        this._urgentHigh = 0;
+        this._UHC = "violet";
+        this._HC = "blue";
+        this._IRC = "lightgreen";
+        this._LC = "pink";
+        this._ULC = "red";
+        this._UH = 0;
         this._high = 0;
         this._low = 0;
-        this._urgentLow = 0;
-        this._bgValue = 0;
-        this._bgUnits = "bg/dL";
+        this._UL = 0;
+//        this._bgValue = 0;
+//        this._bgUnits = "bg/dL";
 
         BGLow = this._low ? this._low : 60;
-        uLow = this._urgentLow ? this._urgentLow : 50;
+        uLow = this._UL ? this._UL : 50;
 //        uLow -= 10;
         logUL = Math.log(uLow+10);
 
         BGHigh = this._high ? this._high : 180;
-        uHigh = this._urgentHigh ? this._urgentHigh : 200;
+        uHigh = this._UH ? this._UH : 200;
 //        uHigh += 10;
         logUH = Math.log(uHigh+10);
     }
 
 
-    setUHColor(c) {
-        this._urgentHighColor = c;
+    setUHC(c) {
+        this._UHC = c;
     }
 
-    setHColor(c) {
-        this._highColor = c;
+    setHC(c) {
+        this._HC = c;
     }
 
-    setIRColor(c) {
-        this._inRangeColor = c;
+    setIRC(c) {
+        this._IRC = c;
     }
-    IRC(){return this._inRangeColor}
+    IRC(){return this._IRC}
 
-    setLColor(c) {
-        this._lowColor = c;
+    setLC(c) {
+        this._LC = c;
     }
 
-    setULColor(c) {
-        this._urgentLowColor = c;
+    setULC(c) {
+        this._ULC = c;
     }
 
     setUH(c) {
-        this._urgentHigh = c;
-        uHigh = this._urgentHigh ? this._urgentHigh : 200;
+        this._UH = c;
+        uHigh = this._UH ? this._UH : 200;
 //        uHigh += 10;
         logUH = Math.log(uHigh+10);
         logRange = logUH - logUL;
@@ -79,30 +79,31 @@ export default class Graph {
         BGHigh = this._high ? this._high : 180;
     }
     H(){return this._high}
-    HC() {return this._highColor}
+    HC() {return this._HC}
 
     setL(c) {
         this._low = c;
         BGLow = this._low ? this._low : 60;
     }
     L(){return this._low}
-    LC() {return this._lowColor}
+    LC() {return this._LC}
 
     setUL(c) {
-        this._urgentLow = c;
-        uLow = this._urgentLow ? this._urgentLow : 50;
+        this._UL = c;
+        uLow = this._UL ? this._UL : 50;
 //        uLow -= 10;
         logUL = Math.log(uLow-10);
         logRange = logUH - logUL;
     }
 
-    setBGValue(v) {
-        this._bgValue = v;
-    }
-
     setBGColor() {}
 
     setYRange() {}
+
+/*
+    setBGValue(v) {
+        this._bgValue = v;
+    }
 
     setBGUnits(v) {
         this._bgUnits = v;
@@ -115,10 +116,13 @@ export default class Graph {
             return(this._bgValue);
         }
     }
+*/
+    
     maxBGs() {
         return (66);
     }
 
+/*
     bgHigher(v) {
         if (v > 0 && this.bgValue() > v) return true;
         else return false;
@@ -128,20 +132,21 @@ export default class Graph {
         if (v > 0 && this.bgValue() < v) return true;
         else return false;
     }
-
+*/
+    
     setColor(v) {
         var c;
         
-        if (this._urgentHigh > 0 && v > this._urgentHigh) {
-            c =  this._urgentHighColor;
+        if (this._UH > 0 && v > this._UH) {
+            c =  this._UHC;
         } else if (this._high > 0 && v > this._high) {
-            c =  this._highColor;
-        } else if (this._urgentLow > 0 && v < this._urgentLow) {
-            c =  this._urgentLowColor;
+            c =  this._HC;
+        } else if (this._UL > 0 && v < this._UL) {
+            c =  this._ULC;
         } else if (this._low > 0 && v < this._low) {
-            c =  this._lowColor;
+            c =  this._LC;
         } else {
-            c = this._inRangeColor;
+            c = this._IRC;
         }
         return(c);
     }
@@ -151,7 +156,7 @@ export default class Graph {
 
 
 
-    updateRgraph(BG, height, width) {
+    updateRgraph(BGval, BGdate, height, width, caldate) {
         let widest = (height / 2) - 15;
 
         function scale(val, lo) {
@@ -166,7 +171,7 @@ export default class Graph {
 //        uLow -= 10;
 //        uHigh += 10;
 
-//        console.log(`updateGraph, BG length = ${BG.length}`);
+//        console.log(`updateGraph, BG length = ${BGval.length}`);
 //        if (BG.length < 60) return; // make sure we have a good number
 
 //        let range = uHigh - uLow;
@@ -181,7 +186,7 @@ export default class Graph {
         c.x = widthCenter - scale(BGLow, logUL);
         c.y = heightCenter - scale(BGLow, logUL);
         c.style.display = "inline";
-        c.style.fill = this._lowColor;
+        c.style.fill = this._LC;
 
         c=this._midCircle;
         c.width = 2*scale(100, logUL);
@@ -195,14 +200,18 @@ export default class Graph {
         c.x = widthCenter - scale(BGHigh, logUL);
         c.y = heightCenter - scale(BGHigh, logUL);
         c.style.display = "inline";
-        c.style.fill = this._highColor;
+        c.style.fill = this._HC;
 
-        var dt,h,m,r,angle,radius,i,v;
+        let dt,h,m,r,angle,radius,i,v;
 
         //        for (let i = 0 ; i < BG.length && i < this._rdots.length ; i++)
-        for (i = 0 ; i < BG.length && i < this._rdots.length ; i++) {
-            v = BG[i].s;
-            dt = new Date(BG[i].d);
+        let usedCal = false;
+        for (i = 0 ; i < this._rdots.length ; i++)
+            this._rdots[i].style.display = "none";
+
+        for (i = 0 ; i < Math.min(BGval.length,66) ; i++) {
+            v = BGval[i];
+            dt = new Date(BGdate[i]);
             h = dt.getHours();
             m = dt.getMinutes();
             r = scale(v, logUL);
@@ -216,13 +225,15 @@ export default class Graph {
             this._rdots[i].cx = widthCenter + x;
             this._rdots[i].cy = heightCenter - y;
 
+            this._rdots[i].r = 2;
+            if (!usedCal && caldate > BGdate[i] && i > 0) {
+                this._rdots[i-1].r = 4;
+                //console.log(">>>>> used calibration")
+                usedCal = true; // found the latest calibration time
+            }
+
             this._rdots[i].style.fill = this.setColor(v);
             this._rdots[i].style.display = "inline";
-        }
-
-        while (i < this._rdots.length) {
-            this._rdots[i].style.display = "none";
-            i++;
         }
     }
 

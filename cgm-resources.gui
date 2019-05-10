@@ -19,9 +19,7 @@
   </g>
   <image id="circle" href="calibrate.png" x="$-25" y="$-25" height="25" width="25" display="none" fill="white"/>
   <text id="sgv" pointer-events="visible" x="0" y="100%-2" text-anchor="start" font-size="40" fill="white"
-        opacity="1" display="none">
-    000 mins old
-  </text>
+        opacity="1" display="none" text-length="13" />
   <rect id="sgvbutton" pointer-events="visible" x="0" y="235" width="65" height="65" opacity="0" />
   
   <circle id="state" cx="100%-15" cy="15" r="10" fill="white" display="none"/>
@@ -146,12 +144,12 @@
   <text x="0" y="200" text-anchor="start" font-size="30">Min:</text>
   <text id="graphMinAt" x="60" y="200" text-anchor="start" font-size="35">00:00</text>
   <text x="50%" y="200" text-anchor="start" font-size="30">Max:</text>
-  <text id="graphMaxAt" x="50%+65" y="200" text-anchor="start" font-size="35">0:00</text>
+  <text id="graphMaxAt" x="50%+65" y="200" text-anchor="start" font-size="35">00:00</text>
   
   <text x="0" y="233" text-anchor="start" font-size="30">IOB:</text>
-  <text id="graphIOB" x="60" y="233" text-anchor="start" font-size="35">00:00</text>
+  <text id="graphIOB" x="60" y="233" text-anchor="start" font-size="35">00.00</text>
   <text x="50%" y="233" text-anchor="start" font-size="30">COB:</text>
-  <text id="graphCOB" x="50%+70" y="233" text-anchor="start" font-size="35">0:00</text>
+  <text id="graphCOB" x="50%+70" y="233" text-anchor="start" font-size="35">00.00</text>
   
   <text id="graphStartAt" x="0" y="265" text-anchor="start" font-size="35">Start: 000</text>
   <text id="graphEndAt" x="0" y="$-7" text-anchor="start" font-size="35">End: 000</text>

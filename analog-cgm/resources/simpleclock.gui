@@ -39,7 +39,8 @@
   <g id="cometorbit" transform="translate(50%,50%)" opacity="1">
       <rect x="0" y="-140" width="0" height="140" >
         <g id="comet" transform="translate($,-140)" display="none">
-          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" />
+              <circle cx="$" cy="$" r="8" fill="red" /> 
+<!--          <image href="comet.png" width="40" height="30" x="$-3" y="$-16" opacity="1" /> -->
         </g>
       </rect>
   </g>
