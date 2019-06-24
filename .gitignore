@@ -2,6 +2,8 @@
 analog-cgm-testing
 radial-cgm-testing
 orbits-ns-testing
+analog-cgm-testing
+radial-cgm-testing
 *#
 build
 node_modules
@@ -9,3 +11,7 @@ node_modules
 *.old
 *.orig
 *-old
+images
+*/app/index.js
+*/app/graph.js
+*/common/utils.js
