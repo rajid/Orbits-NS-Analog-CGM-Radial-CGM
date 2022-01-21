@@ -5,12 +5,15 @@ function HelloWorld(props) {
     return (
         
         <Page>
-          <Text bold>Now configuration can be copy/pasted.
-            (See end of Configuration sections, before "General operation notes")</Text>
-          <Text>Note: This software has been tested to best of my abilities, however some bugs
+          <Text bold>Note: This software has been tested to best of my abilities, however some bugs
             may still be present.  Please make sure you have some other method of receiving a warning
             of Urgent Low BG values.
           </Text>
+
+          <Text>Configuration can be copy/pasted as well as saved and restored between other CGM/NS
+            watchfaces by this same author.
+            (See end of Configuration sections, before "General operation notes")</Text>
+
           <Text>Some general notes on how the watch face displays information are included
             at the end of this configuration page.</Text>
           <Text>(Scroll to end for Release Notes)</Text>
@@ -110,8 +113,7 @@ function HelloWorld(props) {
               the circumstances mentioned.  This may allow the range to be more quickly determined,
               especially if sight is hampered by blurriness (such as in the morning).
               The color is also used when displaying a BG warning message.</Text>
-            <Text>(All 'Web Standard' color names should work.  Names should be only lower-case
-              and names should not have a space, e.g. "lightgreen".
+            <Text>(All <Link source="https://dev.fitbit.com/build/guides/user-interface/css/#web-color-names">'Web Standard' color names</Link> should work.  Names should not have a space, e.g. "lightgreen".
               Keep in mind the color should contrast well against black.
               If the color isn't recognized, then white will be used instead.)</Text>
             <TextInput label="Urgent Low Color" settingsKey="urgentLowColor" type="text"/>
@@ -238,6 +240,20 @@ function HelloWorld(props) {
               process again when/if you come back.
             </Text>
             <TextInput settingsKey="config" label="Configuration:" type="text" />
+
+          <Text>Use the following buttons to Save into a common area, or to Restore from the common area.
+            This allows quick migration of configuration between the
+            watch faces "Orbits NS", "Analog CGM", and "Radial CGM".
+            </Text>
+
+            <Text align="center" >
+              <Button label="Save configuration" onClick={() => {props.settingsStorage.setItem("import", "0")}} />
+            </Text>
+            <Text align="center" >
+                <Button label="Restore configuration" onClick={() => {props.settingsStorage.setItem("import", "1")}} />
+                  {typeof(props.settings.import) !== 'undefined' && <Text align="center">Updating...</Text> }
+            </Text>
+
           </Section>
 
           <Section title={<Text align="center">General operation notes:</Text>}>
@@ -406,6 +422,23 @@ Fixed problem with "quiet time start" and "quiet time end" not working after res
             <Text align="left" bold>1.8.6</Text>
             <Text>
 Fixed problem with BG of "0" during times of network problems.
+            </Text>
+            <Text align="left" bold>1.8.8</Text>
+            <Text>
+Automatically convert all color names to lowercase.
+Guarantee that Nightscout URL begins with "https:".
+Rebuilt for latest SDK and Versa 2.
+            </Text>
+            <Text align="left" bold>1.9.0</Text>
+            <Text>
+Allow watchface to restart, if needed, when the "update" button is pressed.
+Correctly keep track of changes to the graph data when removing old entries.
+New "Save configuration" and "Restore configuration" buttons to allow
+migration of settings between analog-cgm, orbits-ns, and radial-cgm.
+            </Text>
+            <Text align="left" bold>2.0.0</Text>
+            <Text>
+Enable Always On Display capability.
             </Text>
           </Section>
 

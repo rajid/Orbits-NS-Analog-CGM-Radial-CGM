@@ -17,3 +17,7 @@ rm -f app/graph.js
 
 rm -f common/utils.js
 /usr/local/lib/node_modules/uglify-es/bin/uglifyjs -c -m toplevel <common-utils.js >common/utils.js
+
+# Apparently, the latest fitbit build process can't seem to use a symlink here
+rm -f companion/index.js
+cp app-companion.js companion/index.js

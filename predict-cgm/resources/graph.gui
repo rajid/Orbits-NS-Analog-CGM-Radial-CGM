@@ -1,0 +1,102 @@
+<symbol id="graph" >
+
+ <svg>
+   <arc id="lowCircle" arc-width="2" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="red" />
+   <arc id="midCircle" arc-width="2" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="green" />
+   <arc id="highCircle" arc-width="2" start-angle="0" sweep-angle="360" x="50%" y="50%" width="0" height="0" fill="blue" />
+ 
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="rdotx" cx="0" cy="0" r="2" fill="white"/>
+
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+   <circle class="pdotx" cx="0" cy="0" r="2" fill="white"/>
+
+</svg>
+</symbol>

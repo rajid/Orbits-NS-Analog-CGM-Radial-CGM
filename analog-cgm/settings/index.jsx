@@ -5,12 +5,15 @@ function HelloWorld(props) {
     return (
         
         <Page>
-          <Text bold>Now configuration can be copy/pasted.
-            (See end of Configuration sections, before "General operation notes")</Text>
           <Text>Note: This software has been tested to best of my abilities, however some bugs
             may still be present.  Please make sure you have some other method of receiving a warning
             of Urgent Low BG values.
           </Text>
+
+          <Text>Configuration can be copy/pasted as well as saved and restored between other CGM/NS
+            watchfaces by this same author.
+            (See end of Configuration sections, before "General operation notes")</Text>
+
           <Text>Some general notes on how the watch face displays information are included
             at the end of this configuration page.</Text>
           <Text>(Scroll to end for Release Notes)</Text>
@@ -138,10 +141,11 @@ function HelloWorld(props) {
           </Section>
 
           <Section title={<Text bold align="center">Watch Face settings:</Text>}>
-            <TextInput settingsKey="gradient" label="Gradient background color (lowercase)" type="text" />
-            <TextInput settingsKey="hour" label="Hour hand color (lowercase)" type="text" />
-            <TextInput settingsKey="minute" label="Minute hand color (lowercase)" type="text" />
-            <TextInput settingsKey="second" label="Second hand color (lowercase)" type="text" />
+              <TextInput settingsKey="gradient" label="Gradient background color" type="text" />
+              <TextInput settingsKey="hour" label="Hour hand color" type="text" />
+              <TextInput settingsKey="minute" label="Minute hand color" type="text" />
+              <TextInput settingsKey="second" label="Second hand color" type="text" />
+              <Toggle settingsKey="seconds" label={`Display second hand ${props.settings.seconds === 'true' ? 'On' : 'Off'}`}/>
           </Section>
 
           <Section title={<Text bold align="center">Daily Alarms:</Text>}>
@@ -245,6 +249,19 @@ function HelloWorld(props) {
               process again when/if you come back.
             </Text>
             <TextInput settingsKey="config" label="Configuration:" type="text" />
+
+          <Text>Use the following buttons to Save into a common area, or to Restore from the common area.
+            This allows quick migration of configuration between the
+            watch faces "Orbits NS", "Analog CGM", and "Radial CGM".
+            </Text>
+            <Text align="center" >
+              <Button label="Save configuration" onClick={() => {props.settingsStorage.setItem("import", "0")}} />
+            </Text>
+            <Text align="center" >
+                <Button label="Restore configuration" onClick={() => {props.settingsStorage.setItem("import", "1")}} />
+                  {typeof(props.settings.import) !== 'undefined' && <Text align="center">Updating...</Text> }
+            </Text>
+
           </Section>
 
           <Section title={<Text align="center">General operation notes:</Text>}>
@@ -383,7 +400,7 @@ function HelloWorld(props) {
               Fixed "Snooze Comm Warnings" menu item to work correctly.
               Fixed bug which could result in multiple BG warnings even after they were snoozed.
             </Text>
-            <Text align="left" bold>1.6.0</Text>
+            <Text align="left" bold>1.5.2</Text>
             <Text>
               Simplified the alarm buzz so it's more regular.
               Reduced memory usage in various places.
@@ -396,19 +413,42 @@ function HelloWorld(props) {
               Fixed testing of "long term alarms" re. calibrations.
               Calibrations now show as a large dot on the graph.
             </Text>
-            <Text align="left" bold>1.6.1</Text>
+            <Text align="left" bold>1.5.4</Text>
             <Text>
-Fixed problem with reloading alarm notes after a reboot, reduced memory usage a little more.
+Fixed various issues with alarms not triggered or displaying wrong messages. Fixed "Current Suppressions" not displaying all alarm suppressions. Fixed error where a "Dismiss" button could sometimes appear when it shouldn't. Introduced auto-cancelling of BG suppressions after recovering back over the limit. Buzz for any received BG value lower than 40 mg/dl. Introduced xDrip+ "local/offline" mode configuration toggle. Only buzz for BG value lower than 40 mg/dl. No message window. Increase size of touch area for invoking graph screen.
+            </Text>
+            <Text align="left" bold>1.6.0</Text>
+            <Text>
+              Introduced a way to copy/paste all settings. (This could be very useful for quick configuration during review testing! Check it out it the Settings!) Reduced memory usage in various places. All BG warning snoozes will now automatically clear once the BG level has crossed more than 1 mg/dl back over the limit. Introduced a configurable default snooze time for alarms and BG warnings. It must be configured in settings, but then touching the message itself works.
+            </Text>
+            <Text align="left" bold>1.6.0</Text>
+            <Text>
+              Fixed problem with reloading alarm notes after a reboot, reduced memory usage a little more.
             </Text>
             <Text align="left" bold>1.6.2</Text>
             <Text>
 Fixed problem with "quiet time start" and "quiet time end" not working after restart.
-            </Text>
+            </Text> 
             <Text align="left" bold>1.6.3</Text>
             <Text>
-Fixed problem with BG of "0" during times of network problems.
+Fixed problem with where a BG value of "0" would be displayed if there was a network access error.
             </Text>
-          </Section>
+            <Text align="left" bold>1.6.4</Text>
+            <Text>
+Fixed problem with where a BG value of "0" would be displayed if there was a network access error. Fixed problem where calibration symbol would be displayed along with the arrow and graph of calibration point would not be represented correctly.
+            </Text>
+            <Text align="left" bold>1.6.5</Text>
+            <Text>
+Automatically convert all color names to lowercase. Guarantee that Nightscout URL begins with "https:". Rebuilt for latest SDK and Versa 2. Fix bug in local mode if nightscout URL is not set.
+            </Text>
+            <Text align="left" bold>1.7.0</Text>
+            <Text>
+Allow watchface to restart, if needed, when the "update" button is pressed.
+Correctly keep track of changes to the graph data when removing old entries.
+New "Save configuration" and "Restore configuration" buttons to allow
+migration of settings between analog-cgm, orbits-ns, and radial-cgm.
+            </Text>
+         </Section>
 
         </Page>
     );

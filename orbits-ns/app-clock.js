@@ -1,19 +1,25 @@
-import document from "document";
+import clock from "clock";
+import  document from "document";
 import {
     battery
 } from "power";
+import { display } from "display";
 
 let clockWindow = document.getElementById("clock");
 let myclock = clockWindow.getElementById("clockFace");
+let sunImage = document.getElementById("star");
 let orbit = myclock.getElementById("orbit");
 let moonorbit = orbit.getElementById("moonorbit");
 let earth = orbit.getElementById("earth");
+let earthImage = document.getElementById("earthImage");
 let moon = moonorbit.getElementById("moon");
+let moonImage = document.getElementById("moonImage");
 let belt = myclock.getElementById("belt");
 let asteroid = belt.getElementById("asteroid");
 let grad = myclock.getElementById("rays");
 let cometorbit = myclock.getElementById("cometorbit");
 let comet = cometorbit.getElementById("comet");
+let testAOD = false;
 
 // Returns an angle (0-360) for the current hour in the day, including minutes
 function hoursToAngle(hours, minutes) {
@@ -41,12 +47,41 @@ function weekdayToAngle(weekday) {
 
 export class clockFace {
 
-    constructor(id) {}
+    constructor(id) {
+        console.log(`add listener returned: ${display.addEventListener("change", this.changeDisplay)}`);;
+    }
 
     appName() {
         return "orbitsns";
     }
 
+    aod(a) {
+        testAOD = a;
+        this.changeDisplay(testAOD);
+    }
+
+    changeDisplay(aod) {
+        console.log(`Change display here - aod is ${aod} aodActive is ${display.aodActive}`);
+        /*
+         * Set appropriate earth, sun, moon
+         */
+        if (`${testAOD}` == 'true' ||
+            (display.aodActive && display.on)) {
+            console.log(`aod is ${aod} aodActive is ${display.aodActive} and display.on is ${display.on}`);
+            console.log("setting granularity to minutes");
+            clock.granularity = "minutes";
+            earthImage.href = "earthOutline.png";
+            moonImage.href = "moonOutline.png";
+            sunImage.href = "starOutline.png";
+        } else {
+            console.log("setting granularity to seconds");
+            clock.granularity = "seconds";
+            earthImage.href = "earth_only.png";
+            moonImage.href = "moon_only.png";
+            sunImage.href = "star_only.png";
+        }
+    }
+    
     setHourColor(c) {}
 
     setMinColor(c) {}
@@ -55,19 +90,23 @@ export class clockFace {
 
     setGradColor(c) {}
 
-
-    updateClock(screenHeight, screenWidth, cometTime) {
-        let today = new Date();
+    updateClock(rangeHighest, rangeLowest, cometTime, today, secs) {
+        console.log(`granularity is ${clock.granularity}`);
         let hours = today.getHours() % 12;
         let mins = today.getMinutes();
-        let secs = today.getSeconds();
+        let seconds = today.getSeconds();
         let weekday = today.getDay();
         
+/*
+        hours = 12;
+        mins = 0;
+        weekday = 0;
+*/
         /*
          * Set Sun rays according to power level
          */
-        let rangeHighest = screenHeight * 0.95;
-        let rangeLowest = screenHeight * 0.70;
+//        let rangeHighest = screenHeight * 0.95;
+//        let rangeLowest = screenHeight * 0.70;
         let level = battery.chargeLevel;
         level = ((level * (rangeHighest - rangeLowest)) / 100) +
             rangeLowest;
@@ -88,7 +127,8 @@ export class clockFace {
         moon.groupTransform.rotate.angle = 0 - moonangle;
         let week_angle = weekdayToAngle(weekday);
         belt.groupTransform.rotate.angle = week_angle;
-        asteroid.groupTransform.rotate.angle = 0 - week_angle;
+//        asteroid.groupTransform.rotate.angle = 0 - week_angle;
+        asteroid.groupTransform.rotate.angle = minutesToAngle(seconds, 0);
 
         /*
          * Update the comet, if needed

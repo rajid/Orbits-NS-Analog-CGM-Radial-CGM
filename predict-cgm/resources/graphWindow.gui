@@ -1,0 +1,33 @@
+<svg id="graphWindow" display="none">
+  <rect id="graphBG" x="0" y="0" width="100%" height="100%" fill="white"/>
+
+  <arc id="arcIn" y="10" x="100%-110" width="100" height="100" fill="green" arc-width="30"/>
+  <arc id="arcAbove" y="10" x="100%-110" width="100" height="100" fill="blue" arc-width="30"/>
+  <arc id="arcBelow" y="10" x="100%-110" width="100" height="100" fill="red" arc-width="30"/>
+
+  <text id="timeAbove" x="0" y="30" text-anchor="start" font-size="35" text-length="12" />
+  <text id="timeIn" x="0" y="$-5" text-anchor="start" font-size="35" text-length="12" />
+  <text id="timeBelow" x="0" y="$-5" text-anchor="start" font-size="35" text-length="12" />
+
+  <text id="graphMin" x="0" y="150" text-anchor="start" font-size="35" text-length="8" />
+  <text id="graphMax" x="50%" y="150" text-anchor="start" font-size="35" text-length="8" />
+
+  <text x="0" y="190" text-anchor="start" font-size="35">At:</text>
+  <text id="graphMinAt" x="$" y="190" text-anchor="start" font-size="35">00:00</text>
+  <text x="50%" y="190" text-anchor="start" font-size="35">At:</text>
+  <text id="graphMaxAt" x="$" y="190" text-anchor="start" font-size="35">00:00</text>
+
+  <text x="0" y="233" text-anchor="start" font-size="30">IOB:</text>
+  <text id="graphIOB" x="60" y="233" text-anchor="start" font-size="35">00:00</text>
+  <text x="50%" y="233" text-anchor="start" font-size="30">COB:</text>
+  <text id="graphCOB" x="50%+70" y="233" text-anchor="start" font-size="35">00:00</text>
+  
+  <text id="graphStartAt" x="0" y="265" text-anchor="start" font-size="35">Start: 000</text>
+  <text id="graphEndAt" x="0" y="$-7" text-anchor="start" font-size="35">End: 000</text>
+  
+  <use id="GraphDismiss" pointer-events="visible" href="#square-button" x="50%+5" y="100%-45" width="50%"
+       height="50" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Dismiss" />
+    <set href="#text" attributeName="fill" to="black"/>
+  </use>
+</svg>

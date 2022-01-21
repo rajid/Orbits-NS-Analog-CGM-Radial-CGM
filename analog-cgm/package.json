@@ -4,23 +4,27 @@
   "private": true,
   "license": "UNLICENSED",
   "devDependencies": {
-    "@fitbit/sdk": "~3.1.0",
-    "@fitbit/sdk-cli": "^1.6.0"
+    "@fitbit/sdk": "~4.0.1",
+    "@fitbit/sdk-cli": "^1.7.0"
   },
   "fitbit": {
     "appUUID": "4d7b46b1-aaba-49b4-aa10-183321014dd3",
     "appType": "clockface",
     "appDisplayName": "Analog CGM",
+      "appClusterID": "cgm1",
+      "developerID": "ce3a15bf-5c22-4b30-8718-9ca12286144d",
     "iconFile": "resources/icon.png",
     "wipeColor": "#ffffff",
     "requestedPermissions": [
       "access_internet",
-      "run_background"
+      "run_background",
+      "access_app_cluster_storage"
     ],
     "buildTargets": [
       "higgs",
       "meson",
-      "gemini"
+      "gemini",
+      "mira"
     ],
     "i18n": {},
     "defaultLanguage": "en-US"

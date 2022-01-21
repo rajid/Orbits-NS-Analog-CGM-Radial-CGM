@@ -28,14 +28,14 @@
     <line x1="2" y1="1" x2="20" y2="1" fill="white" stroke-width="1"/>
     <line x1="2" y1="8" x2="20" y2="8" fill="white" stroke-width="1"/>
     <line x1="2" y1="15" x2="20" y2="15" fill="white" stroke-width="1"/>
-    <rect id="menuButton" pointer-events="visible" x="0" y="0" width="65" height="65" opacity="0"/>
+    <rect id="menuButton" pointer-events="visible" x="0" y="0" width="70" height="70" opacity="0" />
    </svg>
 
 <!-- Overlay for Alarm notices -->
   <rect id="noteBG" x="0" y="0" width="100%" height="100%" fill="white" display="none"/>
   <text id="noteTime" text-anchor="middle" x="50%" y="25"  display="none">88:88</text>
   <textarea id="noteMess" text-anchor="start" x="10" y="30" width="100%-10" text-length="200"
-            font-size="40" display="none" fill="black" pointer-events="visible" />
+            fill="black" display="none" pointer-events="visible" />
   <use id="dismiss" href="#square-button" y="75%" width="50%" fill="black"  display="none">
     <set href="#text" attributeName="text-buffer" to="Dismiss" />
     <set href="#text" attributeName="fill" to="black"/>
@@ -95,42 +95,6 @@
     <set href="#text" attributeName="fill" to="black"/>
   </use>
 
-  <svg id="snoozeBGTimes" display="none">
-    <rect x="0" y="0" height="100%" width="100%" fill="orange" />
-  <use id="0" class="snoozeButton" href="#square-button" x="0" y="0" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="0" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="1" class="snoozeButton" href="#square-button" x="50%" y="0" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="1" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="2" class="snoozeButton" href="#square-button" x="0" y="75" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="2" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="3" class="snoozeButton" href="#square-button" x="50%" y="75" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="3" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="4" class="snoozeButton" href="#square-button" x="0" y="150" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="4" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="5" class="snoozeButton" href="#square-button" x="50%" y="150" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="5" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="6" class="snoozeButton" href="#square-button" x="0" y="225" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="6" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  <use id="7" class="snoozeButton" href="#square-button" x="50%" y="225" width="50%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="7" />
-    <set href="#text" attributeName="fill" to="white"/>
-  </use>
-  </svg>
-  
 <svg id="graphWindow" display="none">
   <rect id="graphBG" x="0" y="0" width="100%" height="100%" fill="white"/>
   <use href="#graph" id="docGraph"  x="40" y="0" width="260" height="140" />
@@ -192,7 +156,7 @@
     <set href="#text" attributeName="fill" to="white"/>
   </use>
   <use id="1" class="menuItem" href="#square-button" x="0" y="60" height="60" width="100%" fill="fb-red" >
-    <set href="#text" attributeName="text-buffer" to="" />
+    <set href="#text" attributeName="text-buffer" to="Reset Interval" />
     <set href="#text" attributeName="fill" to="white"/>
   </use>
   <use id="2" class="menuItem" href="#square-button" x="0" y="120" height="60" width="100%" fill="fb-red" >
@@ -220,4 +184,5 @@
 <!--  <g id="arrow" transform="translate(150,150)" > -->
 
 <!--  </g> -->
+<!--   <rect id="test" pointer-events="visible" x="50%-25" y="50%-25" width="50" height="50" opacity="0"/> -->
 </svg>

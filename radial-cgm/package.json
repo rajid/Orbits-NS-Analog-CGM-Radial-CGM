@@ -4,23 +4,27 @@
   "private": true,
   "license": "UNLICENSED",
   "devDependencies": {
-    "@fitbit/sdk": "~3.1.0",
-    "@fitbit/sdk-cli": "^1.6.0"
+    "@fitbit/sdk": "~4.0.1",
+    "@fitbit/sdk-cli": "^1.7.0"
   },
   "fitbit": {
-    "appUUID": "0173730e-5381-4495-bc6e-6ec93c8df029",
+      "appUUID": "0173730e-5381-4495-bc6e-6ec93c8df029",
     "appType": "clockface",
     "appDisplayName": "Radial CGM",
+      "appClusterID": "cgm1",
+      "developerID": "ce3a15bf-5c22-4b30-8718-9ca12286144d",
     "iconFile": "resources/icon.png",
     "wipeColor": "#ffffff",
     "requestedPermissions": [
       "access_internet",
-      "run_background"
+      "run_background",
+      "access_app_cluster_storage"
     ],
     "buildTargets": [
       "higgs",
       "meson",
-      "gemini"
+      "gemini",
+      "mira"
     ],
     "i18n": {},
     "defaultLanguage": "en-US"

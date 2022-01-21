@@ -15,3 +15,26 @@ images
 */app/index.js
 */app/graph.js
 */common/utils.js
+radial-cgm copy
+
+*.latest
+
+analog-cgm-testingorig/app/clock.js
+
+cgm-app.formatted.js
+
+cgm-app-orig.js
+
+cgm-app-indent.js
+
+cgm-app.new.js
+
+cgm-companion-orig.js
+
+orbits-ns/app-index-orig.js
+
+orbits-ns/js-heap. 2020-07-09.14.34.34.bin
+
+orbits-ns/package-lock.json
+
+orbits-ns/package-lock.json

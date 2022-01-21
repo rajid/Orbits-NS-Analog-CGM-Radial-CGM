@@ -94,8 +94,12 @@ let noteBG = doc.getElementById("noteBG");
 let noteMess = doc.getElementById("noteMess");
 let noteTime = doc.getElementById("noteTime");
 //var messTimeout;
+
 let dismissButton = doc.getElementById("dismiss");
+dismissButton.onactivate = dismissText;
+
 let snoozeButton = doc.getElementById("snooze");
+snoozeButton.onactivate = snoozeActivate;
 
 var alarms = [];
 //var messages = [];
@@ -125,6 +129,7 @@ let orb = (appname == "orbitsns") ? 1 : 0;
 // Update the clock every second
 //console.log(`orb is ${orb}`);
 clock.granularity = orb ? "minutes" : "seconds";
+var displaySeconds = 1;
 //console.log(`granularity = ${clock.granularity}`);
 
 let arrow = doc.getElementById("arrow");
@@ -152,18 +157,11 @@ var graphReturn;
 
 //console.log(`appname is ${myClock.appName()}`);
 try {
-    graphWindow = doc.getElementById("graphWindow");
-    graphIOB = graphWindow.getElementById("graphIOB");
-    graphCOB = graphWindow.getElementById("graphCOB");
-    
-    graphDismiss = graphWindow.getElementById("GraphDismiss");
-    graphReturn = 0; // what todo after display of the graph
-    
-    graphDismiss.onclick = dismissGraph;
     
     if (rad) {
         docGraph = doc.getElementById("docGraph");
     } else {
+        graphWindow = doc.getElementById("graphWindow");
         docGraph = graphWindow.getElementById("docGraph");
     }
     myGraph = new Graph(docGraph);
@@ -171,6 +169,9 @@ try {
 
 
 forceUpdate.onclick = function() {
+    try{
+        unlinkSync("forceExit"); // allow reconnect if needed
+    }catch(e){};
     if (nsConfigured) {
         wakeupFetch();
     }
@@ -195,9 +196,11 @@ display.addEventListener("change", displayChange);
 
 
 let nsConfigured = false;
-//var BG = [];
+var BG = [];
 var BGval = [];
 var BGdate = [];
+//var BGval = Array(170);
+//var BGdate = Array(170);
 let bgUnits = "bg/dl"; // default
 let bgVal = 0;
 let bgDate = 0;
@@ -257,6 +260,7 @@ const rangeLowest = screenHeight * 0.55;
 
 
 function updateCorners() {
+    console.log("Update Corners");
     now = new Date();
     let month = doc.getElementById("month");
     let date = doc.getElementById("date");
@@ -383,29 +387,38 @@ function pokeDisp() {
 
     display.poke();
     
-    if (charger.connected)
-        setTimeout(pokeDisp, 5*1000);
+    if (charger.connected) {
+        if (device.modelId != 35)
+            clock.granularity = "seconds";
+    } else if (orb)
+        clock.graularity = "minutes";
 }
 
 // Rotate the hands every tick
 function updateClock() {
-    let today = new Date();
-    fullhours = today.getHours();
+
+    //    let today = new Date();
+    now = new Date();
+    fullhours = now.getHours();
     //    let hours = fullhours % 12;
-    mins = today.getMinutes();
+    mins = now.getMinutes();
     //    let secs = today.getSeconds();
     //    let weekday = today.getDay();
-    mondate = today.getDate();
-    mon = today.getMonth() + 1;
-
-    myClock.updateClock(rangeHighest, rangeLowest, cometTime);
+    mondate = now.getDate();
+    mon = now.getMonth() + 1;
+    
+    myClock.updateClock(rangeHighest, rangeLowest, cometTime, now, displaySeconds);
 
 //    updateCorners();
 
 //    updateNS();
 
-//    console.log(`JS memory: ${(memory.js.used / memory.js.total)*100}`);
+//    console.log(`JS memory used ${memory.js.used}`);
+
+    if (charger.connected && device.modelId != 35)
+        display.poke();
 }
+
 
 
 /*
@@ -413,6 +426,7 @@ function updateClock() {
  * even if "start" is after "end" and thus loops to the next day.
  */
 function inRange(start, end, now) {
+
 
     if (!start.def || !end.def) {
         return false;
@@ -438,12 +452,13 @@ function inRange(start, end, now) {
             return true; // earlier than e
         }
     }
+
     return false;
 }
 
 function vibNudge(now) {
     
-    console.log("**** VibNudge *****")
+//    console.log("**** VibNudge *****")
     if (now == 0 || (!inRange(warnSuppressStart, warnSuppressEnd, now) &&
                      (commSnoozeEnd == 0 || commSnoozeEnd < now.getTime()))) {
         //console.log(`**** Not in Range`);
@@ -694,9 +709,9 @@ let lastCalibration = 0; // init.
 msg.peerSocket.onmessage = evt => {
     now = new Date();
 
-    console.log("mess: " + evt.data.key);
+//    console.log("mess: " + evt.data.key);
 
-    console.log(`Pres: ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
+//    console.log(`Pres: ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
     switch (evt.data.key) {
     case "bg":
         failedFetches = 0; // Ok!  We have communication!            
@@ -706,7 +721,7 @@ msg.peerSocket.onmessage = evt => {
         //console.log(`nextUpdate=${(evt.data.update - now.getTime())/60000} mins`);
         //console.log(`calibration=${evt.data.cal}`);
 
-        let saved = 0;
+        let changed = 0;
 
         if (evt.data.bg > 0) {
             bgVal = evt.data.bg;
@@ -719,20 +734,22 @@ msg.peerSocket.onmessage = evt => {
             if (rad) bginterval=(10*60*1000);
             
             if (bgDate - BGdate[0] >= bginterval) {
-                saved = 1;  // we saved something
+                changed = 1;  // we saved something
                 BGval.unshift(bgVal);
                 BGdate.unshift(bgDate);
-                console.log(`Saved ${bgVal}`);
+//                console.log(`Saved ${bgVal}`);
             }
         }
 
         while (BGdate.length > 0 &&
                (BGdate.length > myGraph.maxBGs() ||
-                BGdate[BGdate.length-1] < (now.getTime() - (11*60*60*1000)))) {
+                BGdate[BGdate.length-1] < (now.getTime() - (11*60*60*1000)))) { 
+            changed = 1;
             BGval.pop();
             if (BGdate.pop() > lastCalibration)
                 lastCalibration = 0;
         }
+//        console.log(`BGdate.length = ${BGdate.length}`);
 
         // buzz if we're only seeing old data
         if ((now.getTime() - bgDate) >= (20 * 60 * 1000) && 
@@ -749,7 +766,7 @@ msg.peerSocket.onmessage = evt => {
             } else
                 longTimeCheck(now);
             
-            if (saved) {
+            if (changed) {
                 if (showingGraph)
                     updateGraph(BGval, BGdate);
                 if (rad) {
@@ -942,6 +959,7 @@ msg.peerSocket.onmessage = evt => {
 //                lastCalibration = data[i].d;
 //            }
         }
+        setTimeout(function(){},0);
         if (showingGraph) {
             updateGraph(BGval, BGdate);
         }
@@ -971,6 +989,24 @@ msg.peerSocket.onmessage = evt => {
         onlyUrgent = evt.data.number;
         testLimits();
         break;
+
+    case "message":
+        dismissButton.style.display = "inline";
+        noteBG.style.fill = "white";
+        noteMess.onclick = dismissText; // for convenience
+        showMessage(evt.data.value, true);
+        break;
+
+    case "seconds":
+        displaySeconds = evt.data.number;
+        console.log(`Storing displaySeconds as ${displaySeconds}`);
+        if (displaySeconds == 1) {
+            clock.granularity = "seconds";
+        } else {
+            clock.granularity = "minutes";
+        }
+        updateClock();
+        break;        
     }
 
     // Received some type of message from companion - so comm is working
@@ -1035,14 +1071,16 @@ msg.peerSocket.onopen = evt => {
  * BG High and Low warning messages, and associated screens
  */
 
-let snoozeBGTimes = doc.getElementById("snoozeBGTimes");
+let snoozeBGTimes = doc.getElementById("snoozeTimes");
 //let BGTimeout = 0;
 let BGLowSnooze = 0;
 let BGHighSnooze = 0;
 let BGUrgentLowSnooze = 0;
 let BGUrgentHighSnooze = 0;
 let BGgraphButton = doc.getElementById("BGgraph");
+BGgraphButton.onactivate = BGshowGraph;
 let suppressButton = doc.getElementById("suppress");
+suppressButton.onactivate = snoozeBG;
 
 function writeLimitsInfo() {
     writeFileSync("BGLimits", {
@@ -1060,7 +1098,7 @@ function writeLimitsInfo() {
 
 
 function BGSnooze(period) {
-    //console.log(`BG Snooze for ${period} minutes`);
+    console.log(`BG Snooze for ${period} minutes`);
     
 
     // Return to normal screen
@@ -1085,6 +1123,7 @@ function BGSnooze(period) {
 
 function dismissBG() {
 
+    console.log("Dismiss function here ********");
     noteMess.style.display = "none";
 //    noteMess.style.fill = "black";
     noteBG.style.display = "none";
@@ -1106,6 +1145,17 @@ function snoozeBG() {
     //console.log("Snooze BG");
     
     dismissBG();
+
+//let bgSnoozeTimes = [20, 40, 60, 90, 120, 180, 240, 480];
+try {
+    let m = readFileSync("BGSnooze", "json");
+    for (let i = 0; i < 8; i++) {
+        if (m[i]) {
+            bgSnoozeTimes[i] = m[i];
+            //            //console.log(`bgSnoozeTimes[${i}] = ${m[i]}`);
+        }
+    }
+} catch (err) {};
 
     // Set the snooze time selections
     for (let i = 0; i < 8; i++) {
@@ -1141,65 +1191,56 @@ function warnBG() {
     }
 
     now = new Date();
-/*
-    if ((bgHigher(BGHigh) && now.getTime() < BGHighSnooze) &&
-        (bgHigher(BGUrgentHigh) && now.getTime() < BGUrgentHighSnooze) &&
-        (bgLower(BGLow) && now.getTime() < BGLowSnooze) &&
-        (bgLower(BGUrgentLow) && now.getTime() < BGUrgentLowSnooze)) {
-        return 0; // still snoozing...
-    }
-*/
+
     if (noticeDismiss.style.display != "none") menuExit();
 
     noteBG.style.fill = myGraph.setColor(bgValue());
     noteBG.style.display = "inline";
     dismissButton.style.display = "none"; // in case it's showing
     snoozeButton.style.display = "none";
-    noteTime.text = `${now.getHours()}:${util.zeroPad(now.getMinutes())}`;
-    noteTime.style.display = "inline";
+//    let timeText = `${now.getHours()}:${util.zeroPad(now.getMinutes())}`;
+//    noteTime.style.display = "inline";
 
     var urgent = false;
+    var noteText;
     if (bgHigher(BGUrgentHigh)) {
-        noteMess.text = `BG of ${bgValue()} is higher than urgent high limit of ${BGUrgentHigh}`;
+        noteText = `BG of ${bgValue()} is higher than urgent high limit of ${BGUrgentHigh}`;
         urgent = true;
     } else
         if (bgHigher(BGHigh)) {
-            noteMess.text = `BG of ${bgValue()} is higher than high limit of ${BGHigh}`;
+            noteText = `BG of ${bgValue()} is higher than high limit of ${BGHigh}`;
             if (BGUrgentHigh == 0) urgent = true;
         } else
             if (bgLower(BGUrgentLow)) {
-                noteMess.text = `BG of ${bgValue()} is lower than urgent limit of ${BGUrgentLow}`;
+                noteText = `BG of ${bgValue()} is lower than urgent limit of ${BGUrgentLow}`;
                 urgent = true;
             } else 
                 if (bgLower(BGLow)) {
-                    noteMess.text = `BG of ${bgValue()} is lower than limit of ${BGLow}`;
+                    noteText = `BG of ${bgValue()} is lower than limit of ${BGLow}`;
                     if (BGUrgentLow == 0) urgent = true; // make sure we see it in this case
                 }
     if (!urgent && defBgSz > 0) {
+        console.log("setting dismiss function *************");
         noteMess.onclick = function() {
             dismissBG();
             BGSnooze(defBgSz);
         }
     } else noteMess.onclick = undefined;
     
-    noteMess.style.display = "inline";
-//    noteMess.style.fill = "black";
-    noteMess.style.fontSize = 40;
-    //console.log("warnBG");
-//    vibration.start("nudge-max");
+//    noteMess.style.display = "inline";
+//    noteMess.style.fontSize = 40;
+    let vib = false;
     if (urgent || !(onlyUrgent && inRange(warnSuppressStart, warnSuppressEnd, now))) {
-        vibPattern(dashes);
-        display.poke();
-//        BGTimeout = setTimeout(warnBG, 10 * 1000); // That was nice!  Do it again!
-        doBuzz();
+        vib = true;
+//        vibPattern(dashes);
+//        display.poke();
+//        doBuzz();
     }
 
-    BGgraphButton.onactivate = BGshowGraph;
-//    BGgraphButton.style.fill = "black";
     BGgraphButton.style.display = "inline";
-//    suppressButton.style.fill = "black";
     suppressButton.style.display = "inline";
-    suppressButton.onactivate = snoozeBG;
+
+    showMessage(noteText, vib);
 
     return 1;
 }
@@ -1213,6 +1254,7 @@ function warnBG() {
 var vibList;
 var vibIdx;
 function vibPattern(list) {
+//    console.log("********** Vib ******");
     vibList = list;
     vibIdx = 0;
     vibNext();
@@ -1232,6 +1274,18 @@ let showingGraph = false;
 function displayGraph() {
     now = new Date();
     
+//    doc.replaceSync("./resources/graphWindow.gui");
+
+    graphWindow = doc.getElementById("graphWindow");
+    graphIOB = graphWindow.getElementById("graphIOB");
+    graphCOB = graphWindow.getElementById("graphCOB");
+    
+    graphDismiss = graphWindow.getElementById("GraphDismiss");
+    graphReturn = 0; // what todo after display of the graph
+    
+    graphDismiss.onclick = dismissGraph;
+    graphWindow.style.display = "inline";
+
     //console.log("displayGraph");
     showingGraph = true;
     myGraph.reset();
@@ -1241,6 +1295,7 @@ function displayGraph() {
     } else {
         // Gather some data for the graph
         //console.log(`Getting graph data because we don't have enough - length=${BG.length}`);
+        setTimeout(function(){},0);
         fetchCompanionData("graph");
     }
 }
@@ -1248,9 +1303,54 @@ function displayGraph() {
 function BGshowGraph() {
 
     graphReturn = warnBG;
-    graphWindow.style.display = "inline";
 
     displayGraph();
+}
+
+function showMessage(mess, vib, timeStamp) {
+    now = new Date();
+
+    console.log(`showmessage - ${mess}`);
+    if (noticeDismiss.style.display != "none") {
+        menuExit();
+    }
+
+    if (mess != "") {
+        noteBG.style.display = "inline";
+        noteMess.text = mess;
+        noteMess.style.display = "inline";
+    }
+    console.log(`timestamp is ${timeStamp}`);
+
+    // Have a timestamp for showAlarm messages, but none for others
+    // because others simply show the current time
+    // Alarms have "Dismiss" and "snooze"
+    if (typeof(timeStamp) != 'undefined') {
+        noteTime.text = timeStamp;
+//        suppressButton.style.display = "inline";
+//        suppressButton.onactivate = snoozeBG;
+//        snoozeButton.style.display = "inline";
+//        snoozeButton.onactivate = snoozeActivate;
+        noteBG.style.fill = "white";
+        noteMess.style.fontSize = 30; // general messages - allow for more text
+        noteTime.style.display = "inline";
+        snoozeButton.style.display = "inline";
+        dismissButton.style.display = "inline";
+    } else {
+        // Either a BG or just message - no snooze button
+        // warnBG has "Graph" and "Suppress"
+        noteTime.text = `${now.getHours()}:${now.getMinutes()}`;
+        snoozeButton.style.display = "none";
+        noteMess.style.fontSize = 40;
+    }
+
+    console.log(`Displaying message`);
+
+    if (vib) {
+        vibPattern(dashes);
+        display.poke();
+        doBuzz();
+    }
 }
 
 /*
@@ -1259,48 +1359,32 @@ function BGshowGraph() {
 function showAlarm(num) {
     now = new Date();
 
+    console.log(`Show alarm ${num}`);
     if (currAlarm != -1 && currAlarm != num) {
-        //console.log(`Got alarm ${num}, but already showing ${currAlarm}`);
+        console.log(`Got alarm ${num}, but already showing ${currAlarm}`);
         return; // later, dude
     }
 
-    if (typeof alarms[num] == 'undefined')
+    if (typeof alarms[num] == 'undefined') {
+        console.log(`alarm is undefined`);
         return;
+    }
     
-    if (noticeDismiss.style.display != "none") {
-        menuExit();
+    if (num < 10) {
+        let timeStamp = `${alarms[num].hour}:${alarms[num].minute}`;
     }
 
     currAlarm = num;
-    noteBG.style.display = "inline";
-    noteBG.style.fill = "white";
-    noteTime.text = `${alarms[num].hour}:${alarms[num].minute}`;
-    noteTime.style.display = "inline";
-//    dismissButton.style.fill = "black";
-    dismissButton.style.display = "inline";
-//    snoozeButton.style.fill = "black";
-    snoozeButton.style.display = "inline";
 
-    dismissButton.onactivate = dismissText;
-    snoozeButton.onactivate = snoozeActivate;
-
+    let mess = "<no message>";
     try{
         let m = readFileSync("mess" + num, "json");
-        noteMess.text = m.message;
-    }catch(e){
-        noteMess.text = "<no message>";
-    }
+        mess = m.message;
+    }catch(e){}
 
-
-//    if (typeof messages[num] == 'undefined' ||
-//        messages[num].value == "") {
-//        noteMess.text = "<no text>";
-//    } else {
-//        noteMess.text = messages[num].value;
-//    }
-//    noteMess.style.fill = "black";
-    noteMess.style.display = "inline";
-    noteMess.style.fontSize = 40;
+    // Turn off any BG message for now
+    BGgraphButton.style.display = "none";
+    suppressButton.style.display = "none";
     if (defAlmSz > 0) {
         noteMess.onclick = function() {
             dismissSnooze();
@@ -1309,20 +1393,7 @@ function showAlarm(num) {
         }
     } else noteMess.onclick = undefined;
 
-    vibPattern(dashes);
-    display.poke();
-    doBuzz();
-//    setTimeout(alarmBuzz, 10 * 1000); // lather, rinse, repeat!
-
-//    writeNote(currAlarm, noteMess.text);
-//    writeNote(currAlarm);
-/*    
-    writeFileSync("snooze", {
-        number: currAlarm,
-        timeout: now.getTime(),
-        last: currAlarm
-    }, "json");
-*/
+    showMessage(mess, true, timeStamp);
 }
 
 // Simply buzz for an alarm again - if it's still on the screen
@@ -1333,12 +1404,7 @@ function alarmBuzz() {
        ) {
         vibration.start("nudge-max");
         display.poke();
-//        if (currAlarm != -1)
-//            currTimeout = setTimeout(alarmBuzz, 10 * 1000);
-//        else
-//            BGTimeout = setTimeout(alarmBuzz, 10 * 1000);
         doBuzz();
-//        buzzTimeout = setTimeout(alarmBuzz, 10 * 1000);
     }
 }
 
@@ -1358,16 +1424,16 @@ function resetAlarm(i) {
 
 
 // Our function handling wakeups for snoozing alarms
-function onWakeup(handle) {
-    //console.log(`wakeup ********* ${handle}`);
-    //console.log(`currAlarm=${currAlarm}, timeout handle is ${regTimeouts[currAlarm]}`);
+function onWakeup(index) {
+    console.log(`wakeup ********* ${index}`);
+    console.log(`index is ${index}, timeout handle is ${regTimeouts[index]}`);
 
-    if (regTimeouts[handle] >= 0) {
+//    if (regTimeouts[index] >= 0) {
         // Continue with current alarm
-        showAlarm(handle);
-        resetAlarm(handle);
+        showAlarm(index);
+        if (index < 10) resetAlarm(index);
         return;
-    }
+//    }
 
 /*
     if (currAlarm >= 0 && regTimeouts[currAlarm] >= 0) {
@@ -1419,21 +1485,22 @@ function dismissText() {
 
     vibration.stop();
 //    clearTimeout(currTimeout);
-    clearAlarm(currAlarm);
+    if (currAlarm != -1) {
+        clearAlarm(currAlarm);
 //    clearTimeout(buzzTimeout);
 //    clearTimeout(snoozeTimeouts[currAlarm]);
 //    snoozeTimeouts[currAlarm] = 0;
     
 //    currSnooze = 0;
-    lastAlarm = currAlarm; // so we can get it back again, if needed
+        lastAlarm = currAlarm; // so we can get it back again, if needed
 
 //    writeNote(currAlarm, noteMess.text);
-    writeNote(currAlarm);
+        writeNote(currAlarm);
 
     /* If any alarm has a "snoozes" time in the past, run it now */
-    overlapAlarm();
-    currAlarm = -1;
-
+        overlapAlarm();
+        currAlarm = -1;
+    }
 /*
     writeFileSync("snooze", {
         number: currAlarm,
@@ -1452,22 +1519,24 @@ function selectSnooze(index) {
     
     let snoozeTime = index;
 
-    //console.log(`resetting alarm for snooze of ${snoozeTime} mins`);
+    console.log(`resetting alarm ${currAlarm} for snooze of ${snoozeTime} mins`);
     
     now = new Date();
-    clearAlarm(currAlarm);
+    if (currAlarm != -1) {
+        clearAlarm(currAlarm);
 //    clearTimeout(snoozeTimeouts[currAlarm]);
-    snoozes[currAlarm] = now.getTime() + (snoozeTime * 60 * 1000);
-    snoozeTimeouts[currAlarm] = setTimeout(onWakeup, snoozeTime * 60 * 1000, currAlarm);
+        snoozes[currAlarm] = now.getTime() + (snoozeTime * 60 * 1000);
+        snoozeTimeouts[currAlarm] = setTimeout(onWakeup, snoozeTime * 60 * 1000, currAlarm);
     //console.log(`curr Timeout Handle = ${regTimeouts[currAlarm]}`);
     
     //console.log(`currAlarm=${currAlarm}`);
-    lastAlarm = currAlarm;
+        lastAlarm = currAlarm;
     
 //    writeNote(currAlarm, noteMess.text);
-    writeNote(currAlarm);
-    overlapAlarm();
-    currAlarm = -1;
+        writeNote(currAlarm);
+        overlapAlarm();
+        currAlarm = -1;
+    }
 /*
     writeFileSync("snooze", {
         number: currAlarm,
@@ -1476,6 +1545,7 @@ function selectSnooze(index) {
     }, "json");
 */
     snoozeTimes.style.display = "none";
+    testLimits()
 }
 
 let snoozeTimes = doc.getElementById("snoozeTimes");
@@ -1488,7 +1558,7 @@ for (let i = 0; i < 8; i++) {
 
 // Invoked when the "Snooze" button is pressed
 function snoozeActivate() {
-    snoozeText("BG");
+    snoozeText("note");
 }
 
 function dismissSnooze(){
@@ -1510,16 +1580,17 @@ function snoozeText(type) {
 
     dismissSnooze();
 
-    switch (type) {
-    case "BG":
-//        clearTimeout(currTimeout); // clear current re-buzz/snooze
-//        currSnooze = -1;
-        break;
-
-    case "comm":
-        break;
+//let alarmSnoozeTimes = [10, 20, 30, 40, 50, 60, 90, 120];
+try {
+    let m = readFileSync("alarmSnooze", "json");
+    for (let i = 0; i < 8; i++) {
+        if (m[i]) {
+            alarmSnoozeTimes[i] = m[i];
+            //            //console.log(`alarmSnoozeTimes[${i}] = ${m[i]}`);
+        }
     }
-    
+} catch (err) {}
+
     // Set the snooze time selections
     for (let i = 0; i < 8; i++) {
         let sts = snoozeTimes.getElementById(i.toString());
@@ -1528,7 +1599,7 @@ function snoozeText(type) {
         
         let j = alarmSnoozeTimes[i];
         switch (type) {
-        case "BG":
+        case "note":
             sts.onclick = function() {
                 selectSnooze(j)
             };
@@ -1634,11 +1705,16 @@ function writeNote(num) {
 //    setMessage(num, mess);
 
     //console.log(`Saving Alarm: ${alarms[num].hour}:${alarms[num].minute}`);
-    writeFileSync("note" + num, {
-        hour: alarms[num].hour,
-        minute: alarms[num].minute,
-        snooze: snoozes[num]
-    }, "json");
+    if (num >= 10) {
+        alarms[num] = {hour: 0, minute: 0};
+    }
+    try {
+        writeFileSync("note" + num, {
+            hour: alarms[num].hour,
+            minute: alarms[num].minute,
+            snooze: snoozes[num]
+        }, "json");
+    }catch(e){}
 }
 
 function setMessage(num, mess) {
@@ -1738,8 +1814,8 @@ for (let i = 0; i < 10; i++) {
             aminute = m.minute;
         }
 
-        console.log(`>>> Setting alarm for ${ahour}:${aminute}`);
-        console.log(`snooze is ${m.snooze}`);
+//        console.log(`>>> Setting alarm for ${ahour}:${aminute}`);
+//        console.log(`snooze is ${m.snooze}`);
 /*
         if (!isNaN(ahour) && !isNaN(aminute)) {
             //console.log(`i=${i}: m=${ahour}:${aminute} , ${mess}`);
@@ -1754,7 +1830,7 @@ for (let i = 0; i < 10; i++) {
             if (diff < 0) { // Make it for tomorrow instead
                 diff += 24 * 60 * 60 * 1000;
             }
-            console.log(`Setting timeout in ${diff} ms`);
+//            console.log(`Setting timeout in ${diff} ms`);
             
             regTimeouts[i] = setTimeout(onWakeup, diff, i);
             //console.log(`snooze is ${m.snooze}`);
@@ -1763,7 +1839,7 @@ for (let i = 0; i < 10; i++) {
         if (m.snooze > 0) {
             if(m.snooze > now.getTime()) {
                 snoozeTimeouts[i] = setTimeout(onWakeup, m.snooze - now.getTime(), i);
-                console.log(`Snooze alarm set ${m.snooze-now.getTime()}`);
+                //console.log(`Snooze alarm set ${m.snooze-now.getTime()}`);
                 snoozes[i] = m.snooze;
             } else {
                 currAlarm = i;
@@ -1784,13 +1860,15 @@ function dismissGraph() {
 
     showingGraph = false;
     graphWindow.style.display = "none";
+
+//    document.replaceSync("./resources/index.gui");
+
     if (graphReturn) graphReturn();
 }
 
 sgvbutton.onclick = function(e) {
     //console.log("click on sgv");
     
-    graphWindow.style.display = "inline";
     graphReturn = 0;
 
     displayGraph();
@@ -1970,8 +2048,9 @@ let menuWindow1 = doc.getElementById("menuWindow1");
 let menuItemClass = menuWindow1.getElementsByClassName("menuItem");
 for (let i = 0; i < menuItemClass.length ; i++) {
     let menu1 = menuWindow1.getElementById(i.toString());
+    let t = menu1.getElementById("text");
     menu1.onclick = function () {
-        menu1click(menu1.text);
+        menu1click(t.text);
     };
 }
 
@@ -2002,6 +2081,10 @@ function menu1click(id) {
         cancelSuppressions();
         break;
         
+    case "Reset Interval":
+        resetInterval();
+        break;
+        
     default:
         menuWindow1.style.display = "none";
     }
@@ -2027,8 +2110,9 @@ let menuWindow2 = doc.getElementById("menuWindow2");
 menuItemClass = menuWindow2.getElementsByClassName("menuItem");
 for (let i = 0; i < menuItemClass.length ; i++) {
     let menu2 = menuWindow2.getElementById(i.toString());
+    let t = menu2.getElementById("text");
     menu2.onclick = function () {
-        menu2click(menu2.text);
+        menu2click(t.text);
     };
 }
 menuItemClass = undefined;
@@ -2043,6 +2127,10 @@ function menu2click(string) {
         cancelSuppressions();
         break;
         
+    case "Reset Interval":
+        resetInterval();
+        break;
+
     default:
         menuWindow2.style.display = "none";
     }
@@ -2071,6 +2159,14 @@ let noticeDismiss = doc.getElementById("noticeDismiss");
 /*
  * Menu item routines
  */
+function resetInterval() {
+    
+    msg.peerSocket.send({
+        command: "podreset"
+    });
+    menuExit();
+}
+
 function suppressionsText() {
     //  <rect id="noteBG" x="0" y="0" width="100%" height="100%" fill="white" display="none"/>
     //  <text id="noteTime" text-anchor="middle" x="50%" y="25"  display="none">88:88</text>
@@ -2205,6 +2301,8 @@ try {
 
 
 let alarmSnoozeTimes = [10, 20, 30, 40, 50, 60, 90, 120];
+/*
+let alarmSnoozeTimes = [10, 20, 30, 40, 50, 60, 90, 120];
 try {
     let m = readFileSync("alarmSnooze", "json");
     for (let i = 0; i < 8; i++) {
@@ -2214,8 +2312,11 @@ try {
         }
     }
 } catch (err) {}
+*/
 let defAlmSz=0;                  // init.
 
+let bgSnoozeTimes = [20, 40, 60, 90, 120, 180, 240, 480];
+/*
 let bgSnoozeTimes = [20, 40, 60, 90, 120, 180, 240, 480];
 try {
     let m = readFileSync("BGSnooze", "json");
@@ -2226,6 +2327,7 @@ try {
         }
     }
 } catch (err) {};
+*/
 let defBgSz=0;                  // init.
 
 try {
@@ -2275,3 +2377,21 @@ if (nsConfigured) {
 //console.log(`Memory pressure is at ${memory.monitor.pressure} ${memory.js.used} / ${memory.js.total}`);
 
 updateCorners();
+
+console.log(`model id is ${device.modelId}, name is ${device.modelName}`);
+
+if (display.aodAvailable && watch.permissions.granted("access_aod")) {
+    console.log("AOD is allowed");
+    display.aodAllowed = true;
+}
+
+/*
+let aod=false;
+try {
+    doc.getElementById("test").onclick=function() {
+        console.log("Clicking star");
+        aod = !aod;
+        myClock.aod(aod);
+    }
+}catch(e){}
+*/

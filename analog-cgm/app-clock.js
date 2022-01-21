@@ -12,6 +12,7 @@ let secHand = document.getElementById("secHand");
 let cometorbit = document.getElementById("cometorbit");
 let comet = cometorbit.getElementById("comet");
 let grad = document.getElementById("grad");
+let batteryLevel = 0;
 
 function hoursToAngle(hours, minutes) {
     let hourAngle = (360 / 12) * hours;
@@ -64,33 +65,40 @@ export class clockFace {
         this._gradColor= c;
     }
 
-    updateClock(rangeHighest, rangeLowest, cometTime) {
-        let today = new Date();
-        let hours = today.getHours() % 12;
-        let mins = today.getMinutes();
-        let secs = today.getSeconds();
+    updateClock(rangeHighest, rangeLowest, cometTime, today, secs) {
         
         /*
          * Update power level gradient
          */
         
-        let level = battery.chargeLevel;
-        level = ((level * (rangeHighest - rangeLowest)) / 100) +
-            rangeLowest;
-        grad.gradient.x2 = level;
-        grad.gradient.y2 = level;
+        if (battery.chargeLevel != batteryLevel) {
+            batteryLevel = battery.chargeLevel;
+            let level = ((batteryLevel * (rangeHighest - rangeLowest)) / 100) +
+                rangeLowest;
+            grad.gradient.x2 = level;
+            grad.gradient.y2 = level;
+        }
         grad.gradient.colors.c1 = this._gradColor;
 
         /*
          * Update the actual time display
          */
-        hourG.groupTransform.rotate.angle = hoursToAngle(hours, mins);
-        minG.groupTransform.rotate.angle = minutesToAngle(mins);
-        secG.groupTransform.rotate.angle = secondsToAngle(secs);
-        
+        hourG.groupTransform.rotate.angle = hoursToAngle(today.getHours()%12,
+                                                         today.getMinutes());
+        minG.groupTransform.rotate.angle = minutesToAngle(today.getMinutes());
+
         hourHand.style.fill = this._hourColor;
+//        hourHand.style.opacity = 0.6;
         minHand.style.fill = this._minColor;
-        secHand.style.fill = this._secColor;
+//        minHand.style.opacity = 0.6;
+        console.log(`secs = ${secs}`);
+        if (secs) {
+            secHand.style.fill = this._secColor;
+            secG.groupTransform.rotate.angle = secondsToAngle(today.getSeconds());
+            secHand.style.display = "inline";
+        } else {
+            secHand.style.display = "none";
+        }
 
         /*
          * Update the comet, if needed
