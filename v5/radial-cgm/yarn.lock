@@ -317,7 +317,7 @@
     error-subclass "^2.2.0"
     tslib "^2.0.3"
 
-"@fitbit/sdk-cli@1.7.3":
+"@fitbit/sdk-cli@^1.7.3":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@fitbit/sdk-cli/-/sdk-cli-1.7.3.tgz#f17dd0f02a3e17f1c2c423c4a8b254901bb0730f"
   integrity sha512-nwfwlp2T05CQMPVui6+mfefZdPUZ/YaeFOI9tt0q/mUvrn494Y7uOt4H7OEuOqTRzXhlAPapO43Col1Ny7RUtQ==
@@ -352,7 +352,7 @@
     update-notifier "^4.1.1"
     websocket-stream "^5.5.2"
 
-"@fitbit/sdk@6.0.2":
+"@fitbit/sdk@~6.0.2":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@fitbit/sdk/-/sdk-6.0.2.tgz#d156418345912b32f58f56f4f34a53fb0e1017ff"
   integrity sha512-4Th19I5A3Eul02qhYtjVf64MzimlfPMvsKL8fu/KQKus6sA/+cFkjFZHsi+3OFJyiuGgUZwHTOKMC+z5f+kP6g==
@@ -2172,9 +2172,9 @@ node-addon-api@^3.0.0:
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
 
 node-fetch@~2.6.0:
-  version "2.6.6"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.6.tgz#1751a7c01834e8e1697758732e9efb6eeadfaf89"
-  integrity sha512-Z8/6vRlTUChSdIgMa51jxQ4lrw/Jy5SOW10ObaA47/RElsAN2c5Pn8bTgFGWn/ibwzXTE8qwr1Yzx28vsecXEA==
+  version "2.6.7"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
+  integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
   dependencies:
     whatwg-url "^5.0.0"
 
