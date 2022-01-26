@@ -1,0 +1,248 @@
+<svg viewport-fill="#000000">
+
+  <svg id="clock" >
+    <use href="#clock" id="clockFace" x="50%-150" y="50%-150" width="300" height="300" />  
+  </svg>
+
+  <text id="month" x="25" y="55" font-size="40" fill="white">88</text>
+  <text id="date" text-anchor="end" x="100%-25" y="55" font-size="40" fill="white">88</text>
+  <text id="hour" x="25" y="100%-25" font-size="40" fill="white">88</text>
+  <text id="minute" text-anchor="end" x="100%-25" y="100%-25" font-size="40" fill="white">88</text>
+
+  <rect id="clicker" pointer-events="visible" x="0" y="0" width="100%" height="100%" opacity="0" />
+
+
+  <!-- Added for CGM capabilities -->
+
+  <image id="circle" href="calibrate.png" x="$-45" y="$-45" height="25" width="25" display="none" fill="white"/>
+  <text id="sgv" x="30" y="100%-30" text-anchor="start" font-size="40" fill="white"
+        opacity="1" display="none" text-length="13" />
+  <rect id="sgvbutton" pointer-events="visible" x="15" y="100%-70" width="90" height="70" opacity="0"/>
+
+ <svg id="arrowDisp" display="none">
+  <g id="arrow" transform="translate(100%-45,100%-45)"  opacity="1" display="none">
+    <image href="arrow.png" height="27" width="17" x="$-8" y="$-13" opacity="1"/>
+  </g>
+  <text id="arrowTxt" x="100%-30" y="100%-30" font-size="30" display="none" text-length="3" text-anchor="end"  fill="white">XXX</text>
+ </svg>
+  <rect id="arrowButton" pointer-events="visible" x="100%-70" y="100%-70" width="70" height="70" opacity="0" fill="white" />
+  
+  <circle id="state" cx="100%-40" cy="40" r="10" fill="white" display="none"/>
+  <rect id="forceUpdate" pointer-events="visible" x="100%-65" y="0" width="65" height="65" opacity="0" />
+  <svg id="menu" x="35" y="35" width="65" height="65" opacity="1">
+    <line x1="2" y1="1" x2="20" y2="1" fill="white" stroke-width="1"/>
+    <line x1="2" y1="8" x2="20" y2="8" fill="white" stroke-width="1"/>
+    <line x1="2" y1="15" x2="20" y2="15" fill="white" stroke-width="1"/>
+    <rect id="menuButton" pointer-events="visible" x="0" y="0" width="70" height="70" opacity="0" />
+   </svg>
+
+<!-- Overlay for Alarm notices -->
+  <rect id="noteBG" x="0" y="0" width="100%" height="100%" fill="white" display="none"/>
+  <text id="noteTime" text-anchor="middle" x="50%" y="25"  display="none">88:88</text>
+  <textarea id="noteMess" text-anchor="start" x="10" y="40" width="100%-10" text-length="200"
+            font-size="40" display="none" fill="black" pointer-events="visible" />
+  <use id="dismiss" href="#square-button" y="100%-80" width="50%" height="80" fill="fb-red"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Dismiss" />
+    <set href="#text" attributeName="fill" to="black"/>
+    <set href="#text" attributeName="font-size" to="30"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>  
+  <use id="snooze" href="#square-button" x="50%" y="100%-80" width="50%" height="80" fill="fb-red"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Snooze" />
+    <set href="#text" attributeName="fill" to="black"/>
+    <set href="#text" attributeName="font-size" to="30"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+
+<!--
+  <use id="dismiss" href="#square-button" y="100%-60" width="50%" height="60" fill="black"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Dismiss" />
+    <set href="#text" attributeName="fill" to="black"/>
+  </use>  
+  <use id="snooze" href="#square-button" x="50%" y="100%-60" width="50%" height="60" fill="black"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Snooze" />
+    <set href="#text" attributeName="fill" to="black"/>
+  </use>
+-->
+
+  <svg id="timerWindow" display="none">
+    <rect id="timerBG" x="0" y="0" width="100%" height="100%" fill="white"/>
+    <text id="timer" text-anchor="middle" x="50%" y="50%" font-size="40">88:88</text>
+  </svg>
+
+  <svg id="snoozeTimes" display="none">
+    <rect x="0" y="0" height="100%" width="100%" fill="black" />
+<svg x="0" y="5" width="100%" height="100%-10">
+  <use id="0" class="snoozeButton" href="#square-button" x="0" y="0" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="000" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+  <use id="1" class="snoozeButton" href="#square-button" x="50%" y="0" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="001" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+  <use id="2" class="snoozeButton" href="#square-button" x="0" y="80" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="002" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+  <use id="3" class="snoozeButton" href="#square-button" x="50%" y="80" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="003" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+  <use id="4" class="snoozeButton" href="#square-button" x="0" y="160" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="004" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/> 
+    <set href="#text" attributeName="x" to="50%"/>
+ </use>
+  <use id="5" class="snoozeButton" href="#square-button" x="50%" y="160" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="005" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+  <use id="6" class="snoozeButton" href="#square-button" x="0" y="240" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="006" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/> 
+    <set href="#text" attributeName="x" to="50%"/>
+ </use>
+  <use id="7" class="snoozeButton" href="#square-button" x="50%" y="240" width="50%" height="80" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="007" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>
+</svg>
+  </svg>
+  
+  <use id="BGgraph" href="#square-button" y="100%-80" width="50%" height="80" fill="fb-red"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Graph" />
+    <set href="#text" attributeName="fill" to="black"/>
+    <set href="#text" attributeName="font-size" to="30"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="50%"/>
+  </use>  
+  <use id="suppress" href="#square-button" x="50%" y="100%-80" width="50%" height="80" fill="fb-red"  display="none">
+    <set href="#text" attributeName="text-buffer" to="Suppress" />
+    <set href="#text" attributeName="fill" to="black"/>
+    <set href="#text" attributeName="font-size" to="30"/>
+    <set href="#text" attributeName="text-anchor" to="middle"/>
+    <set href="#text" attributeName="x" to="40%"/>
+  </use>
+
+  
+<svg id="graphWindow" display="none">
+  <rect id="graphBG" x="0" y="0" width="100%" height="100%" fill="white"/>
+  <use href="#graph" id="docGraph"  x="15" y="40" width="305" height="110" />
+
+  <text x="58" y="30" font-size="25" >BG range: </text>
+  <text id="graphMin" x="$+5" y="30" text-anchor="start" font-size="25">000</text>
+  <text x="$" y="30" text-anchor="start">-</text>
+  <text id="graphMax" x="$" y="30" text-anchor="start" font-size="25">000</text>
+
+  <text id="graphStart" x="5%" y="170" text-anchor="start" font-size="25">00:00</text>
+  <text id="graphEnd" x="95%" y="170" text-anchor="end" font-size="25">00:00</text>
+
+  <text x="15" y="200" text-anchor="start" font-size="30">Min: </text>
+  <text id="graphMinAt" x="$+5" y="200" text-anchor="start" font-size="30">00:00</text>
+  <text x="50%" y="200" text-anchor="start" font-size="30">Max: </text>
+  <text id="graphMaxAt" x="$+5" y="200" text-anchor="start" font-size="30">00:00</text>
+  
+<!--  <text x="15" y="233" text-anchor="start" font-size="30">IOB:</text> -->
+  <text id="graphIOB" x="15" y="233" text-anchor="start" font-size="30">IOB: -----</text>
+<!--  <text x="50%" y="233" text-anchor="start" font-size="30">COB:</text> -->
+  <text id="graphCOB" x="50%" y="233" text-anchor="start" font-size="30">COB: -----</text>
+  
+  <text id="graphStartAt" x="15" y="265" text-anchor="start" font-size="35">Start: 000</text>
+  <text id="graphEndAt" x="15" y="$-7" text-anchor="start" font-size="35">End: 000</text>
+  
+  <use id="GraphDismiss" pointer-events="visible" href="#square-button" x="50%" y="100%-60" width="50%"
+       height="60" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Dismiss" />
+    <set href="#text" attributeName="fill" to="black"/>
+    <set href="#text" attributeName="x" to="5"/>
+ </use>
+</svg>
+  
+<svg id="menuWindow1" display="none" >
+  <rect x="0" y="0" height="100%" width="100%" fill="blue" />
+  <use id="0" class="menuItem" href="#square-button" x="8%" y="35" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Redo last alarm" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="1" class="menuItem" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Snooze Comm Warnings" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="2" class="menuItem" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Current Suppressions" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="more" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="More ..." />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="exit" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Exit" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+</svg>
+   
+<svg id="menuWindow2" display="none" >
+  <rect x="0" y="0" height="100%" width="100%" fill="blue" />
+  <use id="0" class="menuItem" href="#square-button" x="8%" y="35" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Cancel Suppressions" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="1" class="menuItem" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Reset Interval" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="2" class="menuItem" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="skip" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+  <use id="exit" href="#square-button" x="8%" y="$+2" height="50" width="84%" fill="fb-red" >
+    <set href="#text" attributeName="text-buffer" to="Exit" />
+    <set href="#text" attributeName="fill" to="white"/>
+    <set href="#text" attributeName="font-size" to="25"/>
+  </use>
+</svg>
+
+
+<!-- Dismiss button for informational display windows -->
+<use id="noticeDismiss" pointer-events="visible" href="#square-button" x="50%" y="100%-60" width="50%"
+       height="60" fill="fb-red" display="none">
+  <set href="#text" attributeName="text-buffer" to="Dismiss" />
+  <set href="#text" attributeName="fill" to="black"/>
+</use>
+
+<!--  <g id="arrow" transform="translate(150,150)" > -->
+
+<!--  </g> -->
+<!--   <rect id="test" pointer-events="visible" x="50%-25" y="50%-25" width="50" height="50" opacity="0"/> -->
+</svg>

@@ -48,7 +48,7 @@ function weekdayToAngle(weekday) {
 export class clockFace {
 
     constructor(id) {
-        console.log(`add listener returned: ${display.addEventListener("change", this.changeDisplay)}`);;
+//        console.log(`add listener returned: ${display.addEventListener("change", this.changeDisplay)}`);;
     }
 
     appName() {
@@ -61,20 +61,20 @@ export class clockFace {
     }
 
     changeDisplay(aod) {
-        console.log(`Change display here - aod is ${aod} aodActive is ${display.aodActive}`);
+        //console.log(`Change display here - aod is ${aod} aodActive is ${display.aodActive}`);
         /*
          * Set appropriate earth, sun, moon
          */
         if (`${testAOD}` == 'true' ||
             (display.aodActive && display.on)) {
-            console.log(`aod is ${aod} aodActive is ${display.aodActive} and display.on is ${display.on}`);
-            console.log("setting granularity to minutes");
+            //console.log(`aod is ${aod} aodActive is ${display.aodActive} and display.on is ${display.on}`);
+//            console.log("setting granularity to minutes");
             clock.granularity = "minutes";
             earthImage.href = "earthOutline.png";
             moonImage.href = "moonOutline.png";
             sunImage.href = "starOutline.png";
         } else {
-            console.log("setting granularity to seconds");
+//            console.log("setting granularity to seconds");
             clock.granularity = "seconds";
             earthImage.href = "earth_only.png";
             moonImage.href = "moon_only.png";
@@ -90,23 +90,12 @@ export class clockFace {
 
     setGradColor(c) {}
 
-    updateClock(rangeHighest, rangeLowest, cometTime, today, secs) {
-        console.log(`granularity is ${clock.granularity}`);
-        let hours = today.getHours() % 12;
-        let mins = today.getMinutes();
-        let seconds = today.getSeconds();
-        let weekday = today.getDay();
-        
-/*
-        hours = 12;
-        mins = 0;
-        weekday = 0;
-*/
+    updateClock(rangeHighest, rangeLowest, cometTime, cometClock, today, secs) {
+        //console.log(`granularity is ${clock.granularity}`);
+
         /*
          * Set Sun rays according to power level
          */
-//        let rangeHighest = screenHeight * 0.95;
-//        let rangeLowest = screenHeight * 0.70;
         let level = battery.chargeLevel;
         level = ((level * (rangeHighest - rangeLowest)) / 100) +
             rangeLowest;
@@ -116,28 +105,43 @@ export class clockFace {
         /*
          * Update the actual time display
          */
-        let hour_angle = hoursToAngle(hours, mins);
+        let hour_angle = hoursToAngle(today.getHours(), today.getMinutes());
         orbit.groupTransform.rotate.angle = hour_angle;
-        let minAngle = minutesToAngle(mins, hour_angle);
+        let minAngle = minutesToAngle(today.getMinutes, hour_angle);
         while (minAngle < 0) minAngle += 360;
         earth.style.display = "inline";
         earth.groupTransform.rotate.angle = 0-hour_angle;
-        let moonangle = (mins * 360) / 60;
+        let moonangle = (today.getMinutes() * 360) / 60;
         moonorbit.groupTransform.rotate.angle = moonangle;
         moon.groupTransform.rotate.angle = 0 - moonangle;
-        let week_angle = weekdayToAngle(weekday);
+        let week_angle = weekdayToAngle(today.getDay());
         belt.groupTransform.rotate.angle = week_angle;
 //        asteroid.groupTransform.rotate.angle = 0 - week_angle;
-        asteroid.groupTransform.rotate.angle = minutesToAngle(seconds, 0);
+        asteroid.groupTransform.rotate.angle = minutesToAngle(today.getSeconds(), 0);
 
         /*
          * Update the comet, if needed
          */
-        if (cometTime != 0 && cometTime <= today) {
-            let cometHour = cometTime.getHours();
-            let cometMinute = cometTime.getMinutes();
-            cometorbit.groupTransform.rotate.angle = hoursToAngle(cometHour, cometMinute);
+        //console.log(`cometClock is ${cometClock}, cometTime is ${cometTime}, today is ${today}`);
+        if (cometTime != 0 && today >= cometTime) {
+            let cometHour = cometClock.getHours();
+            let cometMinute = cometClock.getMinutes();
+            let op;
+            cometorbit.groupTransform.rotate.angle =
+                hoursToAngle(cometHour, cometMinute);
             comet.style.display = "inline";
+
+            let timeLeft = cometClock.getTime() - today.getTime();
+            if (timeLeft < 0) {
+                op = 1;
+            } else {
+                let op = 1 -
+                    (timeLeft/(cometClock.getTime() -
+                               cometTime.getTime()));
+            }
+            if (op > 1) op = 1;
+            else if (op < 0) op = 0;
+            comet.style.fillOpacity = op;
         } else {
             comet.style.display = "none";
         }

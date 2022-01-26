@@ -17,10 +17,15 @@
 
   <!-- Added for CGM capabilities -->
 
-  <g id="arrow" transform="translate(280,280)"  opacity="1" display="none">
+ <svg id="arrowDisp" display="none">
+  <g id="arrow" transform="translate(280,280)"  opacity="1">
     <image href="arrow.png" height="27" width="17" x="$-8" y="$-13" opacity="1"/>
   </g>
+  <text id="arrowTxt" x="100%" y="100%-2" font-size="30" display="none" text-length="3" text-anchor="end" >X</text>
   <image id="circle" href="calibrate.png" x="$-25" y="$-25" height="25" width="25" display="none" fill="white"/>
+ </svg>
+  <rect id="arrowButton" pointer-events="visible" x="100%-70" y="100%-70" width="70" height="70" opacity="0" />
+
   <text id="sgv" pointer-events="visible" x="0" y="100%-2" text-anchor="start" font-size="40" fill="white"
         opacity="1" display="none" text-length="13" />
   <rect id="sgvbutton" pointer-events="visible" x="0" y="235" width="65" height="65" opacity="0" />
@@ -31,7 +36,7 @@
     <line x1="2" y1="1" x2="20" y2="1" fill="white" stroke-width="1"/>
     <line x1="2" y1="8" x2="20" y2="8" fill="white" stroke-width="1"/>
     <line x1="2" y1="15" x2="20" y2="15" fill="white" stroke-width="1"/>
-    <rect id="menuButton" pointer-events="visible" x="0" y="0" width="65" height="65" opacity="0"/>
+    <rect id="menuButton" pointer-events="visible" x="0" y="0" width="70" height="70" opacity="0"/>
    </svg>
 
 <!-- Overlay for Alarm notices -->
@@ -167,10 +172,10 @@
   <text x="50%" y="190" text-anchor="start" font-size="35">At:</text>
   <text id="graphMaxAt" x="$" y="190" text-anchor="start" font-size="35">00:00</text>
 
-  <text x="0" y="233" text-anchor="start" font-size="30">IOB:</text>
-  <text id="graphIOB" x="60" y="233" text-anchor="start" font-size="35">00:00</text>
-  <text x="50%" y="233" text-anchor="start" font-size="30">COB:</text>
-  <text id="graphCOB" x="50%+70" y="233" text-anchor="start" font-size="35">00:00</text>
+<!--  <text x="0" y="233" text-anchor="start" font-size="30">IOB:</text> -->
+  <text id="graphIOB" x="0" y="233" text-anchor="start" font-size="35">IOB: -----</text>
+<!--  <text x="50%" y="233" text-anchor="start" font-size="30">COB:</text> -->
+  <text id="graphCOB" x="50%" y="233" text-anchor="start" font-size="35">COB: -----</text>
   
   <text id="graphStartAt" x="0" y="265" text-anchor="start" font-size="35">Start: 000</text>
   <text id="graphEndAt" x="0" y="$-7" text-anchor="start" font-size="35">End: 000</text>

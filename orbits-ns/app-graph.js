@@ -1,1 +1,1 @@
-../cgm-graph.js
+../app-graph.js

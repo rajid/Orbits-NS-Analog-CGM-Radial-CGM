@@ -5,6 +5,7 @@ var uHigh;
 var logUH;
 var logUL;
 var logRange;
+var widest;
 
 function hoursToAngle(hours, minutes) {
     let hourAngle = (360 / 12) * hours;
@@ -18,6 +19,7 @@ export default class Graph {
         
         this._id = id;
         this._rdots = this._id.getElementsByClassName("rdotx");
+        this._pdots = this._id.getElementsByClassName("pdotx");
         this._lowCircle = this._id.getElementById("lowCircle");
         this._midCircle = this._id.getElementById("midCircle");
         this._highCircle = this._id.getElementById("highCircle");
@@ -30,6 +32,7 @@ export default class Graph {
         this._high = 0;
         this._low = 0;
         this._UL = 0;
+        this._PC = "yellow";
 //        this._bgValue = 0;
 //        this._bgUnits = "bg/dL";
 
@@ -42,6 +45,7 @@ export default class Graph {
         uHigh = this._UH ? this._UH : 200;
 //        uHigh += 10;
         logUH = Math.log(uHigh+10);
+        logRange = logUH - logUL;
     }
 
 
@@ -64,6 +68,10 @@ export default class Graph {
 
     setULC(c) {
         this._ULC = c;
+    }
+
+    setPC(c) {
+        this._PC = c;
     }
 
     setUH(c) {
@@ -98,7 +106,8 @@ export default class Graph {
 
     setBGColor() {}
 
-    setYRange() {}
+    setBGYRange() {}
+    setPYRange() {}
 
 /*
     setBGValue(v) {
@@ -119,7 +128,7 @@ export default class Graph {
 */
     
     maxBGs() {
-        return (66);
+        return (42);            // 7 hours
     }
 
 /*
@@ -151,76 +160,71 @@ export default class Graph {
         return(c);
     }
 
+    scale(val, lo) {
+        let l = Math.log(val);
+        return (15 + (((l-lo) * widest) / logRange));
+    }
 
     update(){}
 
+    calculatePosition(date, value, height) {
 
+        let v = (value >= 0) ? value : 0;
+        let dt = new Date(date);
 
-    updateRgraph(BGval, BGdate, height, width, caldate) {
-        let widest = (height / 2) - 15;
+        let h = dt.getHours();
+        let m = dt.getMinutes();
+        let r = this.scale(v, logUL);
+        if (r < 0) r = 0;
+        let angle = hoursToAngle(h,m);
 
-        function scale(val, lo) {
-            let l = Math.log(val);
-            
-            return (15 + (((l-lo) * widest) / logRange));
-//            return(15 + (((val-low) * widest) / range));
-        }
+        angle = angle % 360;
+
+        let y=Math.cos(angle*0.01745) * r;
+        let x=Math.sin(angle*0.01745) * r;
+
+        return([x, y, r]);
+    }
+
+    updateRgraph(BGval, BGdate, height, width, caldate, pvals) {
         let heightCenter = height / 2;
         let widthCenter = width / 2;
-
-//        uLow -= 10;
-//        uHigh += 10;
-
-//        console.log(`updateGraph, BG length = ${BGval.length}`);
-//        if (BG.length < 60) return; // make sure we have a good number
-
-//        let range = uHigh - uLow;
-        
-//        console.log(`rdots length = ${this._rdots.length}`);
+        widest = (height / 2) - 15;
 
         let c=this._lowCircle;
 
         c=this._lowCircle;
-        c.width = 2*scale(BGLow,logUL);
-        c.height = 2*scale(BGLow, logUL);
-        c.x = widthCenter - scale(BGLow, logUL);
-        c.y = heightCenter - scale(BGLow, logUL);
+        c.width = 2*this.scale(BGLow,logUL);
+        c.height = 2*this.scale(BGLow, logUL);
+        c.x = widthCenter - this.scale(BGLow, logUL);
+        c.y = heightCenter - this.scale(BGLow, logUL);
         c.style.display = "inline";
         c.style.fill = this._LC;
 
         c=this._midCircle;
-        c.width = 2*scale(100, logUL);
-        c.height = 2*scale(100, logUL);
-        c.x = widthCenter - scale(100, logUL);
-        c.y = heightCenter - scale(100, logUL);
+        c.width = 2*this.scale(100, logUL);
+        c.height = 2*this.scale(100, logUL);
+        c.x = widthCenter - this.scale(100, logUL);
+        c.y = heightCenter - this.scale(100, logUL);
 
         c=this._highCircle;
-        c.width = 2*scale(BGHigh, logUL);
-        c.height = 2*scale(BGHigh, logUL);
-        c.x = widthCenter - scale(BGHigh, logUL);
-        c.y = heightCenter - scale(BGHigh, logUL);
+        c.width = 2*this.scale(BGHigh, logUL);
+        c.height = 2*this.scale(BGHigh, logUL);
+        c.x = widthCenter - this.scale(BGHigh, logUL);
+        c.y = heightCenter - this.scale(BGHigh, logUL);
         c.style.display = "inline";
         c.style.fill = this._HC;
 
-        let dt,h,m,r,angle,radius,i,v;
+        let dt,h,m,r,angle,radius,i,j;
 
-        //        for (let i = 0 ; i < BG.length && i < this._rdots.length ; i++)
         let usedCal = false;
-        for (i = 0 ; i < this._rdots.length ; i++)
-            this._rdots[i].style.display = "none";
 
-        for (i = 0 ; i < Math.min(BGval.length,66) ; i++) {
-            v = BGval[i];
-            dt = new Date(BGdate[i]);
-            h = dt.getHours();
-            m = dt.getMinutes();
-            r = scale(v, logUL);
-            angle = hoursToAngle(h,m);
-
-            angle = angle % 360;
-
-            let y=Math.cos(angle*0.01745) * r;
-            let x=Math.sin(angle*0.01745) * r;
+        // BGdate values are in reverse time order - newest first
+        for (i = 0 ; i < Math.min(BGval.length,this._rdots.length) ; i++) {
+            let xy = this.calculatePosition(BGdate[i], BGval[i], height);
+            let x = xy[0];
+            let y = xy[1];
+	    if (xy[2] == 0) continue;
 
             this._rdots[i].cx = widthCenter + x;
             this._rdots[i].cy = heightCenter - y;
@@ -232,9 +236,72 @@ export default class Graph {
                 usedCal = true; // found the latest calibration time
             }
 
-            this._rdots[i].style.fill = this.setColor(v);
+            this._rdots[i].style.fill = this.setColor(BGval[i]);
             this._rdots[i].style.display = "inline";
         }
+        while (i < this._rdots.length)
+            this._rdots[i++].style.display = "none";
+
+        /*
+         * Graph any predicted values
+         */
+
+        let timeval = BGdate[0] + (10*60*1000); // newest plus 10 minutes
+
+        // Graph our prediction values
+        for (i = 0 ;
+             i < pvals.length && i < this._pdots.length ;
+             i++, timeval += (10*60*1000)) {
+            let xy = this.calculatePosition(timeval, pvals[i], height);
+            let x = xy[0];
+            let y = xy[1];
+	    if (xy[2] == 0) continue;
+
+            this._pdots[i].cx = widthCenter + x;
+            this._pdots[i].cy = heightCenter - y;
+            this._pdots[i].r = 2;
+            this._pdots[i].style.fill = this._PC;
+            this._pdots[i].style.display = "inline";
+        }
+        while (i < this._pdots.length)
+            this._pdots[i++].style.display = "none";
+    }
+
+    updatePredicts(height, width, pvals) {
+/*
+        var i;
+
+        let heightCenter = height / 2;
+        let widthCenter = width / 2;
+        let dt,h,m,r,angle,radius,i,v;
+
+        let usedCal = false;
+
+        let timeval = new Date();
+        timeval = timeval.getTime() + (5 * 60 * 1000);
+
+        for (i = 0 ; i < this._pdots.length ; i++) {
+            this._pdots[i].style.display = "none";
+        }
+
+        // Graph our prediction values
+        for (i = 0 ;
+             i < Math.min(pvals.length,this._pdots.length) ;
+             i++ , timeval += (10*60*1000)) {
+            let xy = this.calculatePosition(timeval, pvals[i], height);
+            let x = xy[0];
+            let y = xy[1];
+	    if (xy[2] == 0) continue;
+
+            this._pdots[i].cx = widthCenter + x;
+            this._pdots[i].cy = heightCenter - y;
+
+            this._pdots[i].r = 2;
+
+            this._pdots[i].style.fill = this._PC;
+            this._pdots[i].style.display = "inline";
+        }
+*/
     }
 
     reset() {}

@@ -55,6 +55,9 @@ function HelloWorld(props) {
 
             <Toggle settingsKey="units" label={`Units: ${props.settings.units === 'true' ? 'mmol/L' : 'bg/dL'}`}/>
 
+                <Text>Currently prediction graph only works for Loop. AndroidAPS and/or Dexcom support may be added later.</Text>
+            <Toggle settingsKey="predictions" label={`Show predictions: ${props.settings.predictions === 'true' ? 'yes' : 'no'}`}/>
+
           </Section>
           <Section title={<Text bold align="center">BG Low & High limits:</Text>}>
             <Text>Without BG low and high limits, the watch face will not fetch new information
@@ -95,6 +98,13 @@ function HelloWorld(props) {
             <TextInput label="In Range Color" settingsKey="inRangeColor" type="text"/>
             <TextInput label="High Color" settingsKey="highColor" type="text"/>
             <TextInput label="Urgent High Color" settingsKey="urgentHighColor" type="text"/>
+
+            { props.settings.predictions === 'true' &&
+                <Section>
+                    <TextInput label="Prediction Color" settingsKey="predictColor" type="text"/>
+                </Section>
+            }
+
             <Text>This configuration suppresses vibration notifications, for minor events and for
               communication channel loss, during a period, such as sleep time.
               (Note that if communication between the watch and the phone is lost and can not be
@@ -141,11 +151,11 @@ function HelloWorld(props) {
           </Section>
 
           <Section title={<Text bold align="center">Watch Face settings:</Text>}>
-              <TextInput settingsKey="gradient" label="Gradient background color" type="text" />
-              <TextInput settingsKey="hour" label="Hour hand color" type="text" />
-              <TextInput settingsKey="minute" label="Minute hand color" type="text" />
-              <TextInput settingsKey="second" label="Second hand color" type="text" />
-              <Toggle settingsKey="seconds" label={`Display second hand ${props.settings.seconds === 'true' ? 'On' : 'Off'}`}/>
+            <TextInput settingsKey="gradient" label="Gradient background color (lowercase)" type="text" />
+            <TextInput settingsKey="hour" label="Hour hand color (lowercase)" type="text" />
+            <TextInput settingsKey="minute" label="Minute hand color (lowercase)" type="text" />
+            <TextInput settingsKey="second" label="Second hand color (lowercase)" type="text" />
+              <Toggle settingsKey="seconds" label={`Display second hand: ${props.settings.seconds === 'true' ? 'On' : 'Off'}`}/>
           </Section>
 
           <Section title={<Text bold align="center">Daily Alarms:</Text>}>

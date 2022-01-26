@@ -1,1 +1,1 @@
-../cgm-app.js
+../app-index.js

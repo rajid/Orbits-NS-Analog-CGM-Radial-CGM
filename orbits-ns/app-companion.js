@@ -1,1 +1,1 @@
-../cgm-companion.js
+../app-companion.js
