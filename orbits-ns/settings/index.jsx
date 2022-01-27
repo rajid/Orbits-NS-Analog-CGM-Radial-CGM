@@ -28,7 +28,8 @@ function HelloWorld(props) {
               label="Touch here to reset comet now"
               onClick={() => { props.settingsStorage.setItem("change", JSON.stringify("now"))}} />
               <TextInput fill="lightblue" settingsKey="changeDate" label="Manually override comet reset time: MM/DD/YYYY HH:MM" type="datetime" />
-              <TextInput settingsKey="cometDays" label="Reappear after X days" type="text" />
+              <TextInput settingsKey="cometDays" label="Reappear after X days/hours" type="text" />
+              <Toggle settingsKey="cometUnits" label={`Reappear units is ${props.settings.cometUnits === 'true'?'Hours':'Days'}`}/>
               <TextInput settingsKey="cometHours" label="Reappear X hours before the event" type="text" />
               <Text  align="center">URL to receive comet reset time:</Text>
               <Text>If a URL is supplied here, it will accessed at the time when the comet is reset.
