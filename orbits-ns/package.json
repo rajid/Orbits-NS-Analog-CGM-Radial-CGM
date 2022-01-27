@@ -8,7 +8,7 @@
     "@fitbit/sdk-cli": "^1.7.0"
   },
   "fitbit": {
-    "appUUID": "44de5c81-b77c-4f90-baa8-38f3e3d28695",
+    "appUUID": "6d3a86c9-c4b2-4e58-9e12-dccfc63b85fd",
     "appType": "clockface",
     "appDisplayName": "Orbits NS",
       "appClusterID": "cgm1",
@@ -22,9 +22,6 @@
 	"access_aod"
     ],
     "buildTargets": [
-      "higgs",
-      "meson",
-      "gemini",
       "mira"
     ],
     "i18n": {},

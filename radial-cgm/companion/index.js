@@ -20,7 +20,11 @@ import appName from "./appname.js";
 
 import * as appClusterStorage from "app-cluster-storage";
 //import { me as appbit } from "companion";
-const myCluster = appClusterStorage.get("cgm1");
+var myCluster;
+try{
+    myCluster = appClusterStorage.get("cgm1");
+}catch(e){console.log(`Cluster access error ${e}`)}
+console.log(`myCluster is set to ${myCluster} ********`);
 
 // Max. times to try Inet and getting fetch errors before going to Local Mode
 let MAXFETCHERRORS = 3;
@@ -59,6 +63,7 @@ let lowColor = "";
 let inRangeColor = "";
 let highColor = "";
 let urgentHighColor = "";
+let predictColor = "";
 let BGDiff = 0;
 let longPeriod = 0;
 let longDiff = 0;
@@ -66,13 +71,15 @@ let units = "bg/dl"; // init.
 var podChange;
 let minUpdate=0;
 let timerVal=0; // default to no timer
-let cometDays=3;
+let cometPeriod=3;
+let cometUnits='false';
 let cometHours=12;
 var cometURL;
+let showPredictions = false;
 
 
 
-function  sendData(bg, date, period, delta, next) {
+function  sendData(bg, date, period, delta, next, dir) {
     console.log("Replying from companion");
     if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
         let now = new Date();
@@ -83,7 +90,8 @@ function  sendData(bg, date, period, delta, next) {
             date: date,
             period: period,
             delta: delta,
-            update: next
+            update: next,
+            dir: dir            // directional arrow
         });
 
     } else {
@@ -149,6 +157,85 @@ function batteryCheck() {
 }
 
 
+async function getPredictions() {
+
+    console.log(`in getPredictions: showPredictions is ${showPredictions}`);
+    if (showPredictions === 'true') {
+
+        let url = getPredictionsURL()
+        if (url == "") return; // done!
+        
+        console.log(`GetPredictions - url is ${url}`);
+        
+        fetch(url)
+            .then(function (response) {
+                return response.json()
+                    .then(function(data) {
+                        fetchErrors = 0; // worked!!
+                        
+                        console.log(`Have predictions!`);
+                        let predictions = [];
+                        try {
+                            console.log(`Length of predictions is ${data.pump.loop.predicted.values.length}`);
+                            for (let i = 0 ; i < data.pump.loop.predicted.values.length && i < 24 ; i++) {
+                                predictions[i] = data.pump.loop.predicted.values[i*2];
+                            }
+                            console.log(`${predictions.length} predicted values`);
+                            /*
+                              if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
+                              messaging.peerSocket.send({
+                              key: "predict",
+                              v: predictions
+                              });
+                              }
+                            */
+                            const myFileInfo = encode(predictions);
+                            outbox.enqueue('predict.json', myFileInfo);
+                            
+                        }catch(e){
+                            console.log("Returning null predictions *******");
+                            const myFileInfo = encode([]);
+                            outbox.enqueue('predict.json', myFileInfo);
+                        }
+                        return;
+                    });
+            })
+            .catch(function (err) {
+                console.log("Error fetching " + err);
+            });
+    } else {
+        console.log('No predictions to be shown');
+        const myFileInfo = encode([]);
+        outbox.enqueue('predict.json', myFileInfo);
+        return;
+    }
+}
+
+
+
+// Translate directional arrow to a slope
+function dir2slope(direction) {
+
+    console.log(`Direction is ${direction}`);
+    switch ( direction ) {
+    case "Flat":
+        return(0);
+    case "FortyFiveUp":
+        return(45);
+    case "FortyFiveDown":
+        return(-45);
+    case "SingleUp":
+        return(90);
+    case "SingleDown":
+        return(-90);
+    case "DoubleUp":
+        return(90);
+    case "DoubleDown":
+        return(-90);
+    default: // undefined
+        return(180);
+    }
+}
 
 
 let doingFetch = false; // Try to avoid overlapping fetches
@@ -187,6 +274,9 @@ function queryBGD() {
                     let sgv1 = 0 , sgv2 = 0;
                     bgs = []; dates = [];
                     var i;
+                    let dir1="";
+                    let dir2="";
+                    let direction="";
                     for (i = 0 ; i < data.length ; i++) {
                         if (data[i].type == "cal") {
                             if (i > 0) 
@@ -195,11 +285,13 @@ function queryBGD() {
                             if (date1 == 0) {
                                 date1 = data[i].date;
                                 sgv1 = data[i].sgv;
-                                console.log(`saving date1 with index ${i}`);
+                                dir1 = data[i].direction;
+                                console.log(`saving date1 with index ${i} ${data[i].direction}`);
                             } else if (date2 == 0) {
                                 date2 = data[i].date;
                                 sgv2 = data[i].sgv;
-                                console.log(`saving date2 with index ${i}`);
+                                dir2 = data[i].direction;
+                                console.log(`saving date2 with index ${i} ${data[i].direction}`);
                             }
                         }
 //                        bgs[i] = data[i].sgv;
@@ -212,6 +304,7 @@ function queryBGD() {
                     if (sgv1 != 0) {
                         console.log("sgv1");
                         lastbg = sgv1;
+                        direction = dir1;
                         console.log("after sgv1");
                         lastdate = date1;
                         console.log(`after date1 sgv1 is ${sgv1} sgv2 is ${sgv2}`);
@@ -220,13 +313,15 @@ function queryBGD() {
                     } else {
                         console.log("no sgv1");
                         lastbg = sgv2;
+                        direction = dir2;
                         lastdate = date2;
                         lastdelta = 0; // for now
                     }
+
                     console.log("after if");
                     if (isNaN(lastdelta))
                         lastdelta = 0;
-                    console.log(`period=${lastperiod}, bg=${lastbg}, lastdate=${lastdate}, delta=${lastdelta}`);
+                    console.log(`period=${lastperiod}, bg=${lastbg}, lastdate=${lastdate}, delta=${lastdelta} direction=${direction}`);
 
                     bgNext = setUpdateInterval();
 
@@ -243,7 +338,7 @@ function queryBGD() {
                     lastdelta = lastdelta / interval;
                     console.log(`>>>>>>>>>> lastdelta is now ${lastdelta}`);
                     
-                    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext);
+                    sendData(lastbg, lastdate, lastperiod, lastdelta, bgNext, dir2slope(direction));
                     doingFetch = false;              
                 });
         })
@@ -258,9 +353,10 @@ function queryBGD() {
                 }
             }
             // Try again in 1 minute
-            sendData(0,0,0,0, now.getTime() + (1 * 60 * 1000));
+            sendData(0,0,0,0, now.getTime() + (1 * 60 * 1000),"");
             doingFetch = false;              
         });
+
 }
 
 
@@ -269,26 +365,35 @@ function returnGraphData(data) {
     let graphData = [];
 
     let cal = 0;
-    for (let i = 0 ; i*2 < data.length ; i++) {
-        let index = i*2;
+
+    let fromIndex = data.length - (42*2);
+    let toIndex = 0;
+    
+    console.log(`data.length is ${data.length}, fromIndex starting at ${fromIndex}`);
+
+    for ( ; fromIndex < data.length ; fromIndex+=2 , toIndex++) {
+        console.log(`Looking at data item ${fromIndex}`);
+//        let index = fromIndex * 2;
         if (cal == 0) {
-            if (data[index].type == "cal") {
-                index = i*2 - 1;    // value is last entry
-                cal = data[index].date;
+            if (data[fromIndex].type == "cal") {
+//                index = fromIndex*2 - 1;    // value is last entry
+                fromIndex = fromIndex*2 - 1;    // value is last entry
+                cal = data[fromIndex].date;
                 sendSetting("cal", cal, "");
-                console.log(`>>>>>> got a calibration value next - val ${data[index].sgv}`);
-            } else if (index+1 < data.length && data[index+1].type == "cal") {
-                cal = data[index].date;
+                console.log(`>>>>>> got a calibration value next - val ${data[fromIndex].sgv}`);
+            } else if (fromIndex+1 < data.length && data[fromIndex+1].type == "cal") {
+                cal = data[fromIndex].date;
                 sendSetting("cal", cal, "");
-                console.log(`>>>>>> got a calibration value here - val ${data[index].sgv}`);
+                console.log(`>>>>>> got a calibration value here - val ${data[fromIndex].sgv}`);
             }
         }
         
-        graphData[i] = {s: data[index].sgv
-                        ,d: data[index].date
-                       };
+        graphData[toIndex] = {s: data[fromIndex].sgv
+                              ,d: data[fromIndex].date
+                             };
     }
 
+    console.log(`graphData length is ${graphData.length}`);
     const myFileInfo = encode(graphData);
     outbox.enqueue('graph.json', myFileInfo);
 
@@ -355,16 +460,20 @@ function getGraphData() {
 
 
 
+/*
 // Send the weather data to the device
 function returnData(data) {
     const myFileInfo = encode(data);
     outbox.enqueue('file.txt', myFileInfo)
 
 }
+*/
 
 function formatReturnData() {
     console.log("formatReturnData");
     queryBGD();
+    // Get any predictions we can
+    if (showPredictions) getPredictions();
 }
 
 //function formatUpdateData() {
@@ -431,6 +540,7 @@ messaging.peerSocket.onmessage = function(evt) {
         break;
 
     case "podreset":
+        console.log(`Resetting pod time`);
         updateSetting({key:"change"}, true);
         break;
 
@@ -444,8 +554,19 @@ messaging.peerSocket.onmessage = function(evt) {
     }
 }
 
+function setCometPeriod(value) {
+    console.log("setCometPeriod");
+
+    cometPeriod = parseInt(JSON.parse(settingsStorage.getItem("cometDays")).name);
+    if (cometUnits != undefined && cometUnits !== 'true')
+        cometPeriod *= 24; // change to hours
+
+    getAndSendPodchange();
+}
+
 function getAndSendPodchange() {
 
+  try {
 //    podChange = settingsStorage.getItem("podchange");
     podChange = myCluster.getItem("podchange");
     console.log(`new podchange time is ${podChange}`);
@@ -462,12 +583,13 @@ function getAndSendPodchange() {
         messaging.peerSocket.send({
             key: "podchange",
             value: podChange,
-            period: cometDays,
+            period: cometPeriod,
             before: cometHours
         });
     } else {
         console.log("No peerSocket connection");
     }  
+  } catch(e){}
 }
 
 // Listen for the onerror event
@@ -676,6 +798,13 @@ function updateSetting(evt, updateConfigStr) {
         sendLowHigh();
         break;
 
+    case "predictColor":
+        predictColor = JSON.parse(evt.newValue).name.toLowerCase();
+        sendSetting("predCol", 0, predictColor);
+        if (showPredictions)
+            getPredictions();       // update the display as well
+        break;
+
     case "urgentLow":
         BGUrgentLow = parseFloat(JSON.parse(evt.newValue).name);
         if (isNaN(BGUrgentLow)) {
@@ -826,6 +955,17 @@ function updateSetting(evt, updateConfigStr) {
         console.log(`New Units of ${units}`);
         break;
 
+    case "predictions":
+        let sp = settingsStorage.getItem("predictions");
+        if (sp != showPredictions) {
+            showPredictions = sp;
+            getPredictions();
+            getGraphData();
+        }
+        sendSetting("predictions", 0, showPredictions);
+        console.log(`showPredictions is ${showPredictions}`);
+        break;
+
     case "local":
         useLocal = settingsStorage.getItem("local");
         console.log(`useLocal = ${useLocal}`);
@@ -851,17 +991,30 @@ function updateSetting(evt, updateConfigStr) {
         break;
 
     case "cometDays":
-        cometDays = parseInt(JSON.parse(evt.newValue).name);
-        if (isNaN(cometDays)) {
+        let cdays = parseInt(JSON.parse(evt.newValue).name);
+        if (isNaN(cdays)) {
             settingsStorage.removeItem("cometDays");
+        } else {
+            setCometPeriod();
         }
         break;
 
-    case "comethours":
+    case "cometHours":
         cometHours = parseInt(JSON.parse(evt.newValue).name);
         if (isNaN(cometHours)) {
+            console.log("no comet hours");
             settingsStorage.removeItem("cometHours");
+        } else {
+            console.log(`comet hours is ${cometHours}`);
+            setCometPeriod();
         }
+        break;
+
+    case "cometUnits": // False = Days, True = Hours
+        cometUnits = settingsStorage.getItem("cometUnits");
+//        sendSetting("urgent", (onlyUrgent === 'true')?1:0, "");
+        console.log(`cometUnits is ${cometUnits}`);
+        setCometPeriod();
         break;
 
     case "bgFont1":
@@ -977,6 +1130,7 @@ function updateSetting(evt, updateConfigStr) {
             }
         }
         settingsStorage.removeItem("import");
+        sendSetting("confDone", 0, "");
         break;
     }
 
@@ -1053,8 +1207,17 @@ function getSgvURL() {
 }
 
 function getGraphURL() {
-    let count = 24;
-    if (appName() == "radialcgm") count = (66*2);
+    let count = 48;
+    console.log(`gergraphurl showPredictions is ${showPredictions}`);
+    if (showPredictions == 'true') {
+        console.log(`getgraphurl showPredictions is ${showPredictions}`);
+        count = 24;
+    }
+
+//    if (appName() == "radialcgm") count = (66*2);
+    if (appName() == "radialcgm") count = (42*2);
+
+//    count += 150;               // testing values from 18 hours ago
 
     let URL;
     if (useLocal === 'true' && localApp === 'true') {
@@ -1085,6 +1248,19 @@ function getBatteryURL() {
 
 function getIOBCOBURL() {
     let URL = getBaseURL() + "/pebble";
+    if (URLtoken != "") {
+        URL += "?token=" + URLtoken;
+    }
+    return (URL);
+}
+
+function getPredictionsURL() {
+    let URL;
+
+    if (baseURL == "") return "";
+
+    URL = baseURL + `/api/v2/properties`;
+
     if (URLtoken != "") {
         URL += "?token=" + URLtoken;
     }
@@ -1236,6 +1412,9 @@ function sendConfiguration2() {
     }
     sendSetting("defBgSz", defBgSz, "");
     sendSetting("defAlmSz", defAlmSz, "");
+    sendSetting("predCol", 0, predictColor);
+
+    sendSetting("confDone", 0, "");
 }
 
 messaging.peerSocket.onopen = evt => {
@@ -1303,7 +1482,7 @@ catch(err) {
     BGUrgentLow = 0;
 }
 try {
-    urgentLowColor = JSON.parse(settingsStorage.getItem("urgentLowColor")).name;
+    urgentLowColor = JSON.parse(settingsStorage.getItem("urgentLowColor")).name.toLowerCase();
     console.log(`urgentLowColor=${urgentLowColor}`);
 }
 catch(err) {
@@ -1320,7 +1499,7 @@ catch(err) {
 }
 
 try {
-    lowColor = JSON.parse(settingsStorage.getItem("lowColor")).name;
+    lowColor = JSON.parse(settingsStorage.getItem("lowColor")).name.toLowerCase();
     console.log(`lowColor=${lowColor}`);
 }
 catch(err) {
@@ -1328,7 +1507,7 @@ catch(err) {
 }
 
 try {
-    inRangeColor = JSON.parse(settingsStorage.getItem("inRangeColor")).name;
+    inRangeColor = JSON.parse(settingsStorage.getItem("inRangeColor")).name.toLowerCase();
     console.log(`inRangeColor=${inRangeColor}`);
 }
 catch(err) {
@@ -1344,11 +1523,19 @@ catch(err) {
     BGHigh = 0;
 }
 try {
-    highColor = JSON.parse(settingsStorage.getItem("highColor")).name;
+    highColor = JSON.parse(settingsStorage.getItem("highColor")).name.toLowerCase();
     console.log(`highColor=${highColor}`);
 }
 catch(err) {
     highColor = "lightblue";
+}
+
+try {
+    predictColor = JSON.parse(settingsStorage.getItem("predictColor")).name.toLowerCase();
+    console.log(`predictColor=${predictColor}`);
+}
+catch(err) {
+    predictColor = "yellow";
 }
 
 console.log("at bgurgenthigh");
@@ -1360,7 +1547,7 @@ catch(err) {
     BGUrgentHigh = 0;
 }
 try {
-    urgentHighColor = JSON.parse(settingsStorage.getItem("urgentHighColor")).name;
+    urgentHighColor = JSON.parse(settingsStorage.getItem("urgentHighColor")).name.toLowerCase();
     console.log(`urgentHighColor=${urgentHighColor}`);
 }
 catch(err) {
@@ -1417,11 +1604,25 @@ catch(err) {
 
 console.log("at comet days");
 try {
-    cometDays = parseInt(JSON.parse(settingsStorage.getItem("cometDays")).name);
+    let cdays = parseInt(JSON.parse(settingsStorage.getItem("cometDays")).name);
+    cometPeriod = cdays * 24;
+    console.log(`Got days of ${cdays}`);
 }
 catch(err) {
-    settingsStorage.setItem("cometDays", JSON.stringify({"name": "3"}));
-    cometDays = 3;
+//    settingsStorage.setItem("cometDays", JSON.stringify({"name": "3"}));
+//    cometPeriod = 3 * 24;
+}
+
+console.log("at comet Period");
+try {
+    let p = parseInt(JSON.parse(settingsStorage.getItem("cometPeriod")).name);
+    cometPeriod = p;
+    console.log(`Got period of ${p}`);
+}
+catch(err) {
+    settingsStorage.setItem("cometPeriod", JSON.stringify({"name": "72"}));
+    cometPeriod = 72;           // 3 days
+    console.log(`comet period init`);
 }
 
 console.log("at comet hours");
@@ -1432,6 +1633,17 @@ catch(err) {
     settingsStorage.setItem("cometHours", JSON.stringify({"name": "12"}));
     cometHours = 12;
 }
+
+console.log("at comet units");
+cometUnits = settingsStorage.getItem("cometUnits");
+console.log(`Got comet units of ${cometUnits}`);
+
+if (cometUnits == 'true') {
+    let cdays = parseInt(JSON.parse(settingsStorage.getItem("cometDays")).name);
+    cometPeriod = cdays;        // retrieve hours from here
+}
+
+console.log(`Giving cometPeriod of ${cometPeriod}`);
 
 console.log("at comet url");
 try {
@@ -1533,28 +1745,25 @@ try {
     hourColor = JSON.parse(settingsStorage.getItem("hour")).name.toLowerCase();
 }
 catch(err) {}
-if (!hourColor) {
-    hourColor = "white";
-}
 console.log(`hourColor = {$hourColor}`);
+if (!hourColor)
+    hourColor = "white";
 
 var minuteColor;
 try {
     minuteColor = JSON.parse(settingsStorage.getItem("minute")).name.toLowerCase();
 }
 catch(err) {}
-if (!minuteColor) {
+if (!minuteColor)
     minuteColor = "white";
-}
 
 var secondColor;
 try {
     secondColor = JSON.parse(settingsStorage.getItem("second")).name.toLowerCase();
 }
 catch(err) {}
-if (!secondColor) {
+if (!secondColor)
     secondColor = "red";
-}
 
 console.log("at displaySeconds");
 var displaySeconds;
@@ -1562,11 +1771,18 @@ try {
     displaySeconds = settingsStorage.getItem("seconds");
 } catch(e) {}
 if (displaySeconds == null) {
-    displaySeconds = true;
+    displaySeconds = 'true';
     settingsStorage.setItem("seconds", displaySeconds);
 }
-console.log(`Got initial value of displaySeconds as ${displaySeconds}`);
+console.log("at showpredictions");
 
+try {
+    showPredictions = settingsStorage.getItem("predictions");
+} catch(e) {}
+if (showPredictions == null) {
+    showPredictions = 'false';
+    settingsStorage.setItem("predictions", showPredictions);
+}
 console.log("All other initialization depends upon comm channel coming up.");
 
 function logusage(usage) {
@@ -1583,7 +1799,7 @@ try {
     usage = parseInt(n.runs);
 
     if ((n.runs < 50 && (n.runs % 10) == 0) ||
-        (n.runs < 1000 && (n.runs % 50) == 0) ||
+        (n.runs < 1000 && (n.runs % 100) == 0) ||
         (n.runs % 1000) == 0) logusage(usage);
     usage++;
 } catch (err) {

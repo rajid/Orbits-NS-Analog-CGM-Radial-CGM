@@ -1,0 +1,1 @@
+export function zeroPad(t){return t<10&&(t="0"+t),t};export function oneDecimal(t){return parseFloat(Math.round(10*t)/10).toFixed(1)};export function mmol(t){let o=t/18.0182;return Math.floor(10*o+.5)/10};export function mgdl(t){let o=18.0182*t;return Math.floor(o)};

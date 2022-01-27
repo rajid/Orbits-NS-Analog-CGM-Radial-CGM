@@ -1,14 +1,14 @@
 {
   "name": "analog-cgm",
-  "version": "0.1.0",
+  "version": "1.8.8",
   "private": true,
   "license": "UNLICENSED",
   "devDependencies": {
-    "@fitbit/sdk": "~4.0.1",
+    "@fitbit/sdk": "^4.0.1",
     "@fitbit/sdk-cli": "^1.7.0"
   },
   "fitbit": {
-    "appUUID": "4d7b46b1-aaba-49b4-aa10-183321014dd3",
+    "appUUID": "eb59c107-6f22-4ff4-9fe5-811595120449",
     "appType": "clockface",
     "appDisplayName": "Analog CGM",
       "appClusterID": "cgm1",
@@ -16,14 +16,12 @@
     "iconFile": "resources/icon.png",
     "wipeColor": "#ffffff",
     "requestedPermissions": [
-      "access_internet",
-      "run_background",
-      "access_app_cluster_storage"
+        "access_internet",
+        "run_background",
+        "access_app_cluster_storage",
+	"access_aod"
     ],
     "buildTargets": [
-      "higgs",
-      "meson",
-      "gemini",
       "mira"
     ],
     "i18n": {},
@@ -33,5 +31,10 @@
     "prebuild": "../uglify-build.sh",
     "build": "fitbit-build",
     "debug": "fitbit"
+  },
+  "dependencies": {
+    "fp-ts": "^2.1.1",
+    "gulp": "^4.0.2",
+    "lodash": "^4.17.12"
   }
 }

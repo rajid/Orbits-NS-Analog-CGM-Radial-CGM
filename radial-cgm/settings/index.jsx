@@ -1,11 +1,10 @@
-
-
-function HelloWorld(props) {
+function mySettings(props) {
+    const { settings, settingsStorage } = props;
 
     return (
-        
-        <Page>
-          <Text>Note: This software has been tested to best of my abilities, however some bugs
+      <Page>
+        { /*Input your own config sections below this line*/ }
+          <Text bold>Note: This software has been tested to best of my abilities, however some bugs
             may still be present.  Please make sure you have some other method of receiving a warning
             of Urgent Low BG values.
           </Text>
@@ -17,26 +16,27 @@ function HelloWorld(props) {
           <Text>Some general notes on how the watch face displays information are included
             at the end of this configuration page.</Text>
           <Text>(Scroll to end for Release Notes)</Text>
-          <Section title={<Text bold align="center">Periodic comet settings:</Text>}>
-            <Text>A red dot can be setup to appear on the watch face after a set period of time.
+          <Section title={<Text bold align="center">Periodic interval settings:</Text>}>
+              <Text>A marker (dot) can be setup to appear on the watchface after a set period of time.
               This can be useful as a reminder of cannula or sensor changes.
-              When the "reset periodic event" button is pressed, the dot will disappear and will
+              When the "reset interval" button is pressed, the marker will disappear and will
               reappear after a set number of days.
               The reappearance time can be configured to happen a set number of hours before,
               in order to give notice of the upcoming event.</Text>
             <Button
-              label="Touch here to reset periodic event marker now"
+              label="Touch here to reset interval now"
               onClick={() => { props.settingsStorage.setItem("change", JSON.stringify("now"))}} />
-              <TextInput fill="lightblue" settingsKey="changeDate" label="Manually override comet reset time: MM/DD/YYYY HH:MM" type="datetime" />
-              <TextInput settingsKey="cometDays" label="Reappear after X days" type="text" />
+              <TextInput fill="lightblue" settingsKey="changeDate" label="Manually override interval reset time: MM/DD/YYYY HH:MM" type="datetime" />
+              <TextInput settingsKey="cometDays" label="Reappear after ..." type="text" />
+              <Toggle settingsKey="cometUnits" label={`Reappear units is ${props.settings.cometUnits === 'true'?'Hours':'Days'}`}/>
               <TextInput settingsKey="cometHours" label="Reappear X hours before the event" type="text" />
-              <Text  align="center">URL to receive comet reset time:</Text>
-              <Text>If a URL is supplied here, it will accessed at the time when the comet is reset.
+              <Text  align="center">URL to receive interval reset time:</Text>
+              <Text>If a URL is supplied here, it will accessed at the time when the interval is reset.
                 Make sure to use the "https" version of the URL.  
-                If the URL contains "&lt;c&gt;", this will be substituted with the comet reset date and time,
+                If the URL contains "&lt;c&gt;", this will be substituted with the interval reset date and time,
                 in the form "MM/DD/YYYY HH:MM:SS "AM" or "PM", followed by
                 the offset from GMT; e.g. "05/11/2018 10:00:00 AM -0800".</Text>
-              <TextInput settingsKey="cometURL" label="URL for comet reset" type="text" />
+              <TextInput settingsKey="cometURL" label="URL for interval reset" type="text" />
               <Text>When performing a procedure, such as sensor or cannula change, some people
                 prefer an initial timer for various purposes. The follow configures a simple minute
                 timer which counts down, followed by a notification vibration.</Text>
@@ -82,6 +82,9 @@ function HelloWorld(props) {
 
             <Toggle settingsKey="units" label={`Units: ${props.settings.units === 'true' ? 'mmol/L' : 'bg/dL'}`}/>
 
+                <Text>Currently prediction graph only works for Loop. AndroidAPS and/or Dexcom support may be added later.</Text>
+            <Toggle settingsKey="predictions" label={`Show predictions: ${props.settings.predictions === 'true' ? 'yes' : 'no'}`}/>
+
           </Section>
           <Section title={<Text bold align="center">BG Low & High limits:</Text>}>
             <Text>Without BG low and high limits, the watch face will not fetch new information
@@ -121,6 +124,13 @@ function HelloWorld(props) {
             <TextInput label="In Range Color" settingsKey="inRangeColor" type="text"/>
             <TextInput label="High Color" settingsKey="highColor" type="text"/>
             <TextInput label="Urgent High Color" settingsKey="urgentHighColor" type="text"/>
+
+            { props.settings.predictions === 'true' &&
+                <Section>
+                    <TextInput label="Prediction Color" settingsKey="predictColor" type="text"/>
+                </Section>
+            }
+
             <Text>This configuration suppresses vibration notifications, for minor events and for
               communication channel loss, during a period, such as sleep time.
               (Note that if communication between the watch and the phone is lost and can not be
@@ -253,6 +263,7 @@ function HelloWorld(props) {
             This allows quick migration of configuration between the
             watch faces "Orbits NS", "Analog CGM", and "Radial CGM".
             </Text>
+
             <Text align="center" >
               <Button label="Save configuration" onClick={() => {props.settingsStorage.setItem("import", "0")}} />
             </Text>
@@ -264,14 +275,6 @@ function HelloWorld(props) {
           </Section>
 
           <Section title={<Text align="center">General operation notes:</Text>}>
-            <Text align="left" bold>Reading the time and date:</Text>
-            Read the hour by looking a the position of the earth with respect to the sun.
-            Read the minutes by looking at the position of the moon with respect to the earth.
-            Read the day of the week by looking at the position of the comet with respect to the sun.
-
-            (The asteroid revolves around the sun every week, with Sunday at the top, so the first half
-            of the week [Monday, Tuesday, Wednesday] it will be on the right and second half
-            of the week [Thursday, Friday, Saturday] it will be on the left.)
             <Text>
               Touch anywhere on the display in order to display Month and Date in the top-left and top-right
               corners, respectively, and the Hour and Minute (in 24 hour format) in the bottom-left
@@ -378,19 +381,28 @@ function HelloWorld(props) {
             
             "Cancel Suppressions" - Will cancel all currently active suppressions.  This includes BG high and low
             suppressions as well as "comm" suppressions, but does not affect an alarm snooze.
-
-              "Reset Interval" - Will reset the periodic event marker from the watch.
-              This is especially useful when the Fitbit app on the phone has no Internet connection.
-              The functionality is exactly the same as entering Settings and touching on
-              "Touch here to reset periodic event marker now".
           </Section>
           <Section title={<Text align="center">Release Notes:</Text>}>
-            <Text align="left" bold>1.4.1</Text>
+              <Text align="left" bold>Previous versions:</Text>
+            <Text>Added long period alarm warnings after "BG difference notification" configuration.</Text>
+            <Text>Fixed problem where Comm Warning Suppression would be lost after restart.</Text>
+            <Text>Added Nightscout token support.  Added automatic watch face display turn on when alarms happen.</Text>
+            <Text>Added colors for "Urgent High", "High", "Low" and "Urgent Low".
+              Also added "Urgent High" and "Urgent Low" ranges numbers.</Text>
             <Text>
-              Buzz for any received BG value less than 40 mg/dl.
-              Introduced xDrip+ "local/offline" mode configuration toggle.
+              Fixed various small bugs in many places.
+              Introduced a unique vibration pattern.
+              Set default low, high, & in-range colors.
+              Suspend of an urgent warning also suspends associated non-urgent as well,
+	        otherwise recovering from an urgent warning will trigger the non-urgent warning.
+	      Introduced "Local mode" for direct "127.0.0.1" connection to the phone.
             </Text>
-            <Text align="left" bold>1.4.2</Text>
+            <Text>
+              Fixed bug which didn't give an Urgent Low message if some other message had been snoozed already.
+              Fixed bug which where "Current Suppressions" only displayed one suppression.
+              Fixed "Snooze Comm Warnings" menu item to work correctly.
+              Fixed bug which could result in multiple BG warnings even after they were snoozed.
+            </Text>
             <Text>
               Simplified the alarm buzz so it's more regular.
               Reduced memory usage in various places.
@@ -402,34 +414,45 @@ function HelloWorld(props) {
               (since they will now auto-reset once back in range).
               Fixed testing of "long term alarms" re. calibrations.
               Calibrations now show as a large dot on the graph.
+              Now updates only every minute, thus saving power.
+            </Text>
+            <Text align="left" bold>1.4.1</Text>
+            <Text>
+Fixed problem with reloading alarm notes after a reboot, reduced memory usage a little more.
+            </Text>
+            <Text align="left" bold>1.4.2</Text>
+            <Text>
+Fixed problem with "quiet time start" and "quiet time end" not working after restart.
             </Text>
             <Text align="left" bold>1.4.4</Text>
             <Text>
-            Fixed problem with where a BG value of "0" would be displayed if there was a network access error. Fixed problem where calibration symbol would be displayed along with the arrow and graph of calibration point would not be represented correctly.
+Fixed problem with BG of "0" during times of network problems.
             </Text>
             <Text align="left" bold>1.4.5</Text>
             <Text>
-              Automatically convert all color names to lowercase. Guarantee that Nightscout URL begins with "https:". Rebuilt for latest SDK and Versa 2. Fix bug in local mode if nightscout URL is not set.
+Automatically convert all color names to lowercase.
+Guarantee that Nightscout URL begins with "https:".
+Rebuilt for latest SDK and Versa 2.
             </Text>
-            <Text align="left" bold>1.5.0</Text>
+            <Text align="left" bold>1.6.0</Text>
             <Text>
 Allow watchface to restart, if needed, when the "update" button is pressed.
 Correctly keep track of changes to the graph data when removing old entries.
 New "Save configuration" and "Restore configuration" buttons to allow
 migration of settings between analog-cgm, orbits-ns, and radial-cgm.
             </Text>
-            <Text align="left" bold>1.6.0</Text>
+            <Text align="left" bold>1.7.0</Text>
             <Text>
-Introduced new "Reset Interval" menu item.
-Companion code on phone now checks for low phone/cgm battery and will notify via a message on the watch.
-Fixed some minor bugs with display and updating alarms & snoozes.
+Separate "Save Config" and "Restore Config" to make them more usable.
+Changed high and low BG messages to simply a large number, so they can be read more quickly at a glance.
+Added back settings for hour and minute hand colors, which had been lost somewhere.
+Added setting for turning on and off second hand.
+Added ability to set "reappear interval" units to "hours"
+        Minor bug fixes.
             </Text>
-              
           </Section>
 
-        </Page>
-  );
-
+      </Page>);
 }
 
-registerSettingsPage(HelloWorld);
+registerSettingsPage(mySettings);

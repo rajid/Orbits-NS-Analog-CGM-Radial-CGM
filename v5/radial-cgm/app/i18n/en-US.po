@@ -1,0 +1,23 @@
+msgid "StartupMsg"
+msgstr "This is a paid app. After a 48 hour free trial, it requires a one-time payment of $1.00 to keep using it."
+
+msgid "PurchaseStarted"
+msgstr "To continue using Radial CGM please visit www.kzl.io/code and enter this code:"
+
+msgid "UnlockFree"
+msgstr "When the app asks for payment again, use the 'Already purchased' button at the bottom of purchase page to unlock for free."
+
+msgid "CompletePurchase"
+msgstr "Please complete the purchase process on www.kzl.io/code to unlock Radial CGM"
+
+msgid "PurchaseSuccess"
+msgstr "Purchase Successful!"
+
+msgid "OkBtn"
+msgstr "Okay, got it!"
+
+msgid "AlreadyPaidBtn"
+msgstr "Already paid"
+
+msgid "InternetRequired"
+msgstr "This app requires the 'Internet' permission to be granted"
