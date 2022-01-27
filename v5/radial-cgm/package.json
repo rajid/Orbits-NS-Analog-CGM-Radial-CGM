@@ -28,6 +28,7 @@
     "defaultLanguage": "en-US"
   },
   "scripts": {
+    "prebuild": "../uglify-build.sh",
     "build": "fitbit-build",
     "debug": "fitbit"
   }

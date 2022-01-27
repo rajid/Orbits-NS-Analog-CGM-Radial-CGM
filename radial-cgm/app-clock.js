@@ -127,12 +127,12 @@ export class clockFace {
         if (cometTime != 0 && today >= cometTime) {
             let cometHour = cometClock.getHours();
             let cometMinute = cometClock.getMinutes();
-            let op;
             cometorbit.groupTransform.rotate.angle =
                 hoursToAngle(cometHour, cometMinute);
             comet.style.display = "inline";
 
             let timeLeft = cometClock.getTime() - today.getTime();
+	    let op;
             if (timeLeft < 0) {
                 op = 1;
             } else {

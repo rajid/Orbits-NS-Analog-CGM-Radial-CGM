@@ -1305,6 +1305,10 @@ function warnBG() {
                     if (BGUrgentLow == 0) urgent = true; // make sure we see it in this case
                 }
     if (!urgent && defBgSz > 0) {
+<<<<<<< HEAD:v5/app-index.js
+=======
+        //console.log("setting dismiss function *************");
+>>>>>>> origin/master:v5/app-index.js
         noteMess.onclick = function() {
             dismissBG();
             BGSnooze(defBgSz);
@@ -1489,10 +1493,15 @@ function showAlarm(num) {
             //console.log(`def snooze for ${defAlmSz} mins`);
             selectSnooze(defAlmSz);
         }
+<<<<<<< HEAD:v5/app-index.js
         noteMess.onactivate = noteMess.onclick;
     } else {
         noteMess.onclick = undefined;
         noteMess.onactivate = undefined;
+=======
+    } else {
+        noteMess.onclick = undefined;
+>>>>>>> origin/master:v5/app-index.js
     }
     
     noteMess.style.fontSize = 40;

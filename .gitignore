@@ -14,7 +14,14 @@ node_modules
 images
 */app/index.js
 */app/graph.js
+*/app/clock.js
+*/companion/index.js
 */common/utils.js
+v5/*/app/index.js
+v5/*/app/graph.js
+v5/*/app/clock.js
+v5/*/companion/index.js
+v5/*/common/utils.js
 radial-cgm copy
 
 *.latest
@@ -44,3 +51,5 @@ analog-cgm/js-heap. 2020-07-09.14.34.34.bin
 *.bin
 
 *.bin
+
+analog-cgm/js-heap. 2020-07-09.14.34.34.bin
